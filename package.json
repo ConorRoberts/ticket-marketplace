@@ -1,0 +1,25 @@
+{
+  "name": "ticket-marketplace",
+  "type": "module",
+  "scripts": {
+    "dev": "dotenv -- turbo run dev --env-mode=loose --filter=app --filter=common",
+    "dev:all": "dotenv -- turbo run --env-mode=loose dev",
+    "build": "dotenv -- turbo run --env-mode=loose build",
+    "start:app": "pnpm -F app start",
+    "migrate": "dotenv -- tsx ./packages/common/src/data/migrate.ts",
+    "generate": "dotenv -- drizzle-kit generate",
+    "generate:blank": "dotenv -- drizzle-kit generate --custom",
+    "lint": "biome lint packages/*"
+  },
+  "dependencies": {
+    "dotenv-cli": "^7.3.0"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "1.8.3",
+    "dotenv-cli": "^7.4.2",
+    "drizzle-kit": "^0.24.2",
+    "tsx": "^4.17.0",
+    "turbo": "^2.0.9"
+  },
+  "packageManager": "pnpm@9.7.0"
+}

@@ -1,0 +1,38 @@
+name: apply-migrations
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "packages/common/migrations/**"
+      - "packages/common/src/data/**"
+      - "package.json"
+      - ".github/workflows/apply-migrations.yaml"
+
+jobs:
+  migrate:
+    name: apply-migrations
+    runs-on: ubuntu-latest
+    concurrency: migrate-group
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v3
+        name: Install pnpm
+        with:
+          version: 9.7.0
+          run_install: |
+            - args: [--filter, common]
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.11.1
+          cache: "pnpm"
+
+      - name: Run migrations
+        env:
+          DATABASE_URL: ${{secrets.DATABASE_URL}}
+          DATABASE_AUTH_TOKEN: ${{secrets.DATABASE_AUTH_TOKEN}}
+        run: pnpm migrate

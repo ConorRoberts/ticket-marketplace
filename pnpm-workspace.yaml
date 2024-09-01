@@ -1,0 +1,15 @@
+packages:
+  - "packages/*"
+
+catalog:
+  "@conorroberts/utils": "^0.0.18"
+  "@tanstack/react-query": ^5.51.9
+  "@trpc/client": ^11.0.0-rc.466
+  "@trpc/react-query": ^11.0.0-rc.466
+  "@trpc/server": ^11.0.0-rc.466
+  typescript: ^5.5.3
+  drizzle-orm: ^0.33.0
+  valibot: ^0.37.0
+  "@paralleldrive/cuid2": "^2.2.2"
+  remeda: "^2.11.0"
+  "@libsql/client": "^0.5.6"
