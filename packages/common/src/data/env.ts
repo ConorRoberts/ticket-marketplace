@@ -5,5 +5,9 @@ export const env = createEnv({
   schema: (v) => ({
     DATABASE_AUTH_TOKEN: v.string(),
     DATABASE_URL: v.string(),
+    DEV: v.pipe(
+      v.optional(v.picklist(["true", "false"]), "false"),
+      v.transform((e) => e === "true"),
+    ),
   }),
 });

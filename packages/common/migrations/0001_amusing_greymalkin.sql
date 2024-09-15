@@ -1,0 +1,1 @@
+ALTER TABLE `ticket_listings` ADD `user_id` text NOT NULL;

@@ -9,7 +9,9 @@ import "@fontsource/inter/800.css";
 import "@fontsource/inter/900.css";
 import "./tailwind.css";
 
+import { ClerkApp } from "@clerk/remix";
 import { rootAuthLoader } from "@clerk/remix/ssr.server";
+import { NextUIProvider } from "@nextui-org/react";
 import {
   Link,
   Links,
@@ -19,8 +21,10 @@ import {
   ScrollRestoration,
   isRouteErrorResponse,
   redirectDocument,
+  useNavigate,
   useRouteError,
 } from "@remix-run/react";
+import type { LoaderFunctionArgs } from "@remix-run/server-runtime";
 import dayjs from "dayjs";
 import duration from "dayjs/plugin/duration.js";
 import { ArrowRightIcon } from "lucide-react";
@@ -29,11 +33,10 @@ import { Toaster } from "~/components/ui/toaster";
 import { env } from "~/utils/env.server";
 import { TrpcProvider } from "./components/TrpcProvider";
 import { FLY_DEPLOY_URL } from "./utils/createMetadata";
-import { defineLoader } from "./utils/remix";
 
 dayjs.extend(duration);
 
-export const loader = defineLoader((args) => {
+export const loader = (args: LoaderFunctionArgs) => {
   const url = new URL(args.request.url);
 
   if (url.host.includes(FLY_DEPLOY_URL)) {
@@ -50,7 +53,7 @@ export const loader = defineLoader((args) => {
       publishableKey: env.server.CLERK_PUBLISHABLE_KEY,
     },
   );
-});
+};
 
 export type RootLoader = typeof loader;
 
@@ -71,7 +74,7 @@ export const Layout: FC<PropsWithChildren> = ({ children }) => {
         <Meta />
         <Links />
       </head>
-      <body className="bg-gray-950 dark">
+      <body className="bg-gray-50">
         {children}
 
         <ScrollRestoration />
@@ -82,15 +85,19 @@ export const Layout: FC<PropsWithChildren> = ({ children }) => {
 };
 
 const App = () => {
+  const navigate = useNavigate();
+
   return (
-    <TrpcProvider>
-      <div>
+    <NextUIProvider navigate={navigate}>
+      <TrpcProvider>
         <div>
-          <Outlet />
+          <div>
+            <Outlet />
+          </div>
+          <Toaster />
         </div>
-        <Toaster />
-      </div>
-    </TrpcProvider>
+      </TrpcProvider>
+    </NextUIProvider>
   );
 };
 
@@ -114,4 +121,4 @@ export const ErrorBoundary = () => {
   );
 };
 
-export default App;
+export default ClerkApp(App, { afterSignOutUrl: "/login" });

@@ -1,43 +1,43 @@
-import * as DialogPrimitive from "@radix-ui/react-dialog";
-import { NavLink, Outlet, useLocation } from "@remix-run/react";
-import { AnimatePresence, motion } from "framer-motion";
-import { MenuIcon } from "lucide-react";
-import { useEffect, useState, type ComponentProps, type FC } from "react";
+import { SignedIn, SignedOut, UserButton } from "@clerk/remix";
+import { Navbar, NavbarBrand, NavbarContent, NavbarItem } from "@nextui-org/navbar";
+import {
+  Button,
+  Input,
+  Modal,
+  ModalBody,
+  ModalContent,
+  ModalFooter,
+  ModalHeader,
+  useDisclosure,
+} from "@nextui-org/react";
+import { Link, NavLink, Outlet, useLocation, useNavigate } from "@remix-run/react";
+import { ArrowRightFromLine, MenuIcon, TicketIcon } from "lucide-react";
+import { useState, type ComponentProps, type FC } from "react";
+import { Drawer } from "vaul";
 import { Footer } from "~/components/Footer";
-import { Image } from "~/components/Image";
-// import { Logo } from "~/components/Logo";
-import { Dialog, DialogPortal, DialogTrigger } from "~/components/ui/dialog";
+import { Logo } from "~/components/Logo";
 import { cn } from "~/utils/cn";
-import { images } from "~/utils/createMetadata";
 
 const desktopNavLinkStyle =
   "font-medium text-sm h-8 px-3 rounded-lg flex gap-2 items-center justify-center hover:text-gray-700 transition whitespace-nowrap";
 
-const _DesktopNavLink: FC<ComponentProps<typeof NavLink>> = ({
-  children,
-  className,
-  ...props
-}) => {
+const DesktopNavLink: FC<ComponentProps<typeof NavLink>> = ({ children, className, ...props }) => {
   return (
-    <NavLink {...props} className={(_e) => cn(desktopNavLinkStyle, className)}>
+    <NavLink {...props} className={(args) => cn(desktopNavLinkStyle, args.isActive && "bg-gray-100", className)}>
       {children}
     </NavLink>
   );
 };
 
-const MobileNavLink: FC<ComponentProps<typeof NavLink>> = ({
-  children,
-  className,
-  ...props
-}) => {
+const MobileNavLink: FC<ComponentProps<typeof NavLink>> = ({ children, className, ...props }) => {
   return (
     <NavLink
       {...props}
       className={(state) =>
         cn(
-          "font-medium text-sm h-8 px-3 rounded-sm flex gap-2 items-center hover:text-gray-700 transition whitespace-nowrap text-left",
+          "font-medium text-sm h-8 px-3 rounded-sm flex gap-2 items-center hover:bg-gray-100 transition whitespace-nowrap text-left",
           state.isActive && "bg-gray-50",
-          className
+          className,
         )
       }
     >
@@ -47,34 +47,46 @@ const MobileNavLink: FC<ComponentProps<typeof NavLink>> = ({
 };
 
 const Layout = () => {
+  const location = useLocation();
+  const { isOpen, onOpenChange } = useDisclosure();
+  const navigate = useNavigate();
+
   return (
     <>
+      <SellTicketDialog open={isOpen} onOpenChange={onOpenChange} />
       <div className="flex min-h-screen flex-col relative">
-        <div className="flex-1 brightness-[30%] grayscale w-full overflow-hidden -z-10 fixed inset-0">
-          <Image
-            width={1920}
-            imageId={images.imageIds.menuSplash}
-            className="object-cover sm:block hidden"
-          />
-          <Image
-            width={800}
-            imageId={images.imageIds.menuSplash}
-            className="object-cover sm:hidden"
-          />
+        <div className="flex items-center justify-end isolate z-50 fixed bottom-0 inset-x-0 p-2">
+          <MobileNavigation key={location.pathname} />
         </div>
-        {/* <div className="absolute top-0 w-full isolate z-50">
-          <div className="flex items-center justify-end">
-            <MobileNavigation />
-          </div>
-          <div className="items-center justify-between gap-2 mx-auto w-full max-w-5xl hidden md:flex h-16 px-4 lg:px-0">
+        <Navbar className="w-full max-w-5xl mx-auto hidden lg:block bg-transparent" position="static">
+          <NavbarBrand>
             <Link to="/">
               <Logo className="size-8 shadow hover:brightness-[98%] transition" />
             </Link>
-            <div className="flex items-center justify-between gap-2">
+          </NavbarBrand>
+          <NavbarContent className="flex gap-4 h-16" justify="end">
+            <NavbarItem>
               <DesktopNavLink to="/">Home</DesktopNavLink>
-            </div>
-          </div>
-        </div> */}
+            </NavbarItem>
+            <SignedOut>
+              <button type="button" onClick={() => navigate("/login")}>
+                <p>Sell Tickets</p>
+                <TicketIcon className="size-4" />
+              </button>
+              <DesktopNavLink to="/login">
+                <p>Login</p>
+                <ArrowRightFromLine className="size-4" />
+              </DesktopNavLink>
+            </SignedOut>
+            <SignedIn>
+              <button type="button" onClick={() => onOpenChange()} className={desktopNavLinkStyle}>
+                <p>Sell Tickets</p>
+                <TicketIcon className="size-4" />
+              </button>
+              <UserButton showName afterSwitchSessionUrl="/" signInUrl="/login" />
+            </SignedIn>
+          </NavbarContent>
+        </Navbar>
         <div className="flex flex-1 flex-col">
           <Outlet />
         </div>
@@ -84,58 +96,57 @@ const Layout = () => {
   );
 };
 
-const _MobileNavigation = () => {
-  const [open, setOpen] = useState(false);
-  const loc = useLocation();
+const SellTicketDialog: FC<{ open: boolean; onOpenChange: (state: boolean) => void }> = (props) => {
+  return (
+    <Modal size="xl" isOpen={props.open} onOpenChange={props.onOpenChange}>
+      <ModalContent>
+        {(onClose) => (
+          <>
+            <ModalHeader className="flex flex-col gap-1">Modal Title</ModalHeader>
+            <ModalBody>
+              <Input label="Event Name" />
+              <Input label="Price" />
+              <Input label="Something" />
+            </ModalBody>
+            <ModalFooter>
+              <Button variant="light" onPress={onClose}>
+                Close
+              </Button>
+              <Button color="primary" onPress={onClose}>
+                Action
+              </Button>
+            </ModalFooter>
+          </>
+        )}
+      </ModalContent>
+    </Modal>
+  );
+};
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: Need this
-  useEffect(() => {
-    setOpen(false);
-  }, [loc.pathname]);
+const MobileNavigation = () => {
+  const [open, setOpen] = useState(false);
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger className="hover:text-gray-700 text-black transition cursor-pointer size-12 flex items-center justify-center md:hidden">
-        <MenuIcon className="size-7" />
-      </DialogTrigger>
+    <Drawer.Root open={open} onOpenChange={setOpen}>
+      <Drawer.Trigger className="flex h-12 w-16 items-start justify-center pt-2">
+        <div className="relative">
+          <MenuIcon className="h-8 w-8" />
+        </div>
+      </Drawer.Trigger>
+      <Drawer.Portal>
+        <Drawer.Title>Navigation Drawer</Drawer.Title>
+        <Drawer.Description>This is an accessible navigation drawer for mobile devices.</Drawer.Description>
+        <Drawer.Overlay className="fixed inset-0 z-40 bg-black/10 backdrop-blur-sm" />
+        <Drawer.Content className="fixed inset-x-0 bottom-0 z-50 flex flex-col rounded-t-xl bg-white isolate border-t border-gray-200">
+          <div className="mx-auto my-2 h-1.5 w-1/6 rounded-full bg-gray-300" />
 
-      <AnimatePresence>
-        {open && (
-          <DialogPortal forceMount>
-            <DialogPrimitive.Overlay>
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="fixed inset-0 z-40 bg-white/75"
-              />
-            </DialogPrimitive.Overlay>
-            <div className="fixed inset-0 isolate flex items-center justify-center z-50">
-              <DialogPrimitive.Content forceMount>
-                <motion.div
-                  initial={{ y: "-110%" }}
-                  animate={{ y: "-10%" }}
-                  exit={{ y: "-110%" }}
-                  className="px-8 pb-8 pt-16 fixed top-0 inset-x-0 bg-white rounded-b-3xl border-b border-gray-100 overflow-hidden shadow"
-                >
-                  <div className="hidden">
-                    <DialogPrimitive.DialogTitle className="hidden">
-                      Navigation
-                    </DialogPrimitive.DialogTitle>
-                    <DialogPrimitive.DialogDescription className="hidden">
-                      Navigation
-                    </DialogPrimitive.DialogDescription>
-                  </div>
-                  <div className="flex flex-col gap-4">
-                    <MobileNavLink to="/">Home</MobileNavLink>
-                  </div>
-                </motion.div>
-              </DialogPrimitive.Content>
-            </div>
-          </DialogPortal>
-        )}
-      </AnimatePresence>
-    </Dialog>
+          <div className="flex flex-col gap-2 p-8">
+            <MobileNavLink to="/">Home</MobileNavLink>
+          </div>
+        </Drawer.Content>
+        <Drawer.Overlay />
+      </Drawer.Portal>
+    </Drawer.Root>
   );
 };
 

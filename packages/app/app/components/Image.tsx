@@ -1,6 +1,6 @@
 import type { FC } from "react";
 import { cn } from "~/utils/cn";
-import { images } from "~/utils/createMetadata";
+import { images } from "~/utils/images";
 
 export const Image: FC<{
   width: number;
