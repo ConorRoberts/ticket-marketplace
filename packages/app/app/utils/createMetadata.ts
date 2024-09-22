@@ -6,7 +6,8 @@ type Optionals = { description: string; imageId: string; noIndex?: boolean; sepa
 
 const keywords: string[] = [];
 
-export const FLY_DEPLOY_URL = "deadlock-index.fly.dev";
+export const FLY_DEPLOY_URL = "ticket-marketplace.fly.dev";
+const WEBSITE_URL = import.meta.env.DEV ? "http://localhost:3000" : "https://ticket-marketplace.fly.dev";
 
 export const seo = {
   name: "Ticket Marketplace",
@@ -36,7 +37,7 @@ export const createMetadata = (args: RequiredOptions & Partial<Optionals>) => {
   }
 
   if (args.canonical) {
-    const url = new URL(args.canonical, "http://localhost:3000");
+    const url = new URL(args.canonical, WEBSITE_URL);
 
     tags.push({
       tagName: "link",

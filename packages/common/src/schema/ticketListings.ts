@@ -4,6 +4,7 @@ import { int, sqliteTable, text } from "drizzle-orm/sqlite-core";
 import { events } from "./events";
 import { eventTicketSources } from "./eventTicketSources";
 import { sharedColumns } from "./shared/columns";
+import { merchants } from "./merchants";
 
 export const ticketListings = sqliteTable(
   "ticket_listings",
@@ -13,9 +14,13 @@ export const ticketListings = sqliteTable(
       .notNull()
       .references(() => events.id),
     priceCents: int("price_cents").notNull(),
-    userId: text("user_id").notNull(),
+    quantity: int("quantity").notNull().default(1),
+    merchantId: text("merchant_id")
+      .notNull()
+      .references(() => merchants.id),
     isSold: int("is_sold", { mode: "boolean" }).default(false),
     ticketSourceId: text("ticket_source_id").references(() => eventTicketSources.id),
+    stripeProductId: text("stripe_product_id"),
   },
   (_table) => ({}),
 );
@@ -29,6 +34,7 @@ export const ticketListingRelations = relations(ticketListings, (r) => ({
     fields: [ticketListings.eventId],
     references: [events.id],
   }),
+  merchant: r.one(merchants, { fields: [ticketListings.merchantId], references: [merchants.id] }),
 }));
 
 export type TicketListing = InferSelectModel<typeof ticketListings>;

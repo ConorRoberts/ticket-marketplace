@@ -1,7 +1,8 @@
 import type { ActionFunctionArgs, LoaderFunctionArgs } from "@remix-run/node";
+import { accountsRouter } from "./accountsRouter";
+import { ticketListingsRouter } from "./ticketListingsRouter";
 import { createContext } from "./trpcContext";
 import { router, t } from "./trpcServerConfig";
-import { pingRouter } from "./routers/pingRouter";
 
 export const createCaller = async (args: LoaderFunctionArgs | ActionFunctionArgs) => {
   const ctx = await createContext(args);
@@ -9,7 +10,8 @@ export const createCaller = async (args: LoaderFunctionArgs | ActionFunctionArgs
 };
 
 export const trpcRouter = router({
-  ping: pingRouter,
+  listings: ticketListingsRouter,
+  accounts: accountsRouter,
 });
 
 export type TrpcRouter = typeof trpcRouter;

@@ -1,1 +1,0 @@
-ALTER TABLE `ticket_listings` ADD `price_cents` integer NOT NULL;

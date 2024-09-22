@@ -12,4 +12,5 @@ catalog:
   valibot: "0.42.0"
   "@paralleldrive/cuid2": "2.2.2"
   remeda: "2.11.0"
+  dayjs: "1.11.13"
   "@libsql/client": "0.5.6"

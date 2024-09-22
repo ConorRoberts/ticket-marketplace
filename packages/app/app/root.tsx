@@ -25,16 +25,12 @@ import {
   useRouteError,
 } from "@remix-run/react";
 import type { LoaderFunctionArgs } from "@remix-run/server-runtime";
-import dayjs from "dayjs";
-import duration from "dayjs/plugin/duration.js";
 import { ArrowRightIcon } from "lucide-react";
 import type { FC, PropsWithChildren } from "react";
-import { Toaster } from "~/components/ui/toaster";
+import { Toaster } from "sonner";
 import { env } from "~/utils/env.server";
 import { TrpcProvider } from "./components/TrpcProvider";
 import { FLY_DEPLOY_URL } from "./utils/createMetadata";
-
-dayjs.extend(duration);
 
 export const loader = (args: LoaderFunctionArgs) => {
   const url = new URL(args.request.url);

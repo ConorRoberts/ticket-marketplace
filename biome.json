@@ -1,7 +1,7 @@
 {
-	"$schema": "https://biomejs.dev/schemas/1.9.0/schema.json",
+	"$schema": "https://biomejs.dev/schemas/1.9.2/schema.json",
 	"organizeImports": {
-		"enabled": false
+		"enabled": true
 	},
 	"linter": {
 		"enabled": true,
@@ -28,7 +28,8 @@
 			"style": {
 				"noParameterAssign": "off",
 				"noUselessElse": "off",
-				"useNodejsImportProtocol": "off"
+				"useNodejsImportProtocol": "off",
+				"useImportType": "error"
 			},
 			"complexity": {
 				"noBannedTypes": "off",

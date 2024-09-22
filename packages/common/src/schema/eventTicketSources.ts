@@ -5,7 +5,7 @@ import { events } from "./events";
 import { sharedColumns } from "./shared/columns";
 
 export const eventTicketSources = sqliteTable(
-  "event_ticket_source",
+  "event_ticket_sources",
   {
     ...sharedColumns.common,
     name: text("name").notNull(),

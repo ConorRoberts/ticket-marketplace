@@ -69,7 +69,7 @@ const Layout = () => {
               <DesktopNavLink to="/">Home</DesktopNavLink>
             </NavbarItem>
             <SignedOut>
-              <button type="button" onClick={() => navigate("/login")}>
+              <button type="button" onClick={() => navigate("/login")} className={desktopNavLinkStyle}>
                 <p>Sell Tickets</p>
                 <TicketIcon className="size-4" />
               </button>

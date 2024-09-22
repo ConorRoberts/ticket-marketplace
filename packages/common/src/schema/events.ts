@@ -1,6 +1,6 @@
 import type { InferInsertModel, InferSelectModel } from "drizzle-orm";
 import { relations } from "drizzle-orm";
-import { sqliteTable, text } from "drizzle-orm/sqlite-core";
+import { int, sqliteTable, text } from "drizzle-orm/sqlite-core";
 import { eventTicketSources } from "./eventTicketSources";
 import { sharedColumns } from "./shared/columns";
 
@@ -12,6 +12,8 @@ export const events = sqliteTable(
     ...sharedColumns.common,
     name: text("name").notNull(),
     type: text("type", { enum: eventType }).notNull(),
+    date: int("date", { mode: "timestamp_ms" }).notNull(),
+    imageId: text("image_id"),
   },
   (_table) => ({}),
 );

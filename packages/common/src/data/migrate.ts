@@ -7,7 +7,7 @@ import * as schema from "../schema";
 import { env } from "./env";
 import { runLoaders } from "./load";
 
-let url = String(env.server.DATABASE_URL);
+let url = env.server.DATABASE_URL;
 
 // Migrations are only supported via the libsql protocol
 url = url.startsWith("http") ? url.replace(/http(s)?/, "libsql") : url;
@@ -28,9 +28,9 @@ const db = drizzle(
 );
 
 (async () => {
-  // execSync("rm -rf ./packagescommon/migrations");
-  execSync("rm -rf ./packages/common/");
+  execSync("rm -rf ./packages/common/migrations");
   execSync("pnpm generate");
+
   // We're cleaning the database every time we run a migration.
   // This makes sense for now while we have no data that needs to be retained.
   await db.run(sql`drop table if exists migrations;`);
@@ -38,6 +38,8 @@ const db = drizzle(
   await db.run(sql`drop table if exists ticket_listings;`);
   await db.run(sql`drop table if exists event_ticket_sources;`);
   await db.run(sql`drop table if exists events;`);
+  await db.run(sql`drop table if exists ticket_listing_transactions;`);
+  await db.run(sql`drop table if exists merchants;`);
 
   console.info("Running migrations");
   await migrate(db, {

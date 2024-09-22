@@ -4,7 +4,7 @@ import { createMetadata } from "~/utils/createMetadata";
 
 export const meta: MetaFunction = () => createMetadata({ title: "Login", canonical: "/login" });
 
-const Page = () => {
+const Route = () => {
   return (
     <div className="flex flex-1 items-center justify-center p-2 flex-col gap-8">
       <SignIn fallbackRedirectUrl="/?auth-success=true" signUpUrl="/register" path="/login" />
@@ -12,4 +12,4 @@ const Page = () => {
   );
 };
 
-export default Page;
+export default Route;
