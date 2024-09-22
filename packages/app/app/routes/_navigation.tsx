@@ -1,4 +1,5 @@
 import { SignedIn, SignedOut, UserButton } from "@clerk/remix";
+import { valibotResolver } from "@hookform/resolvers/valibot";
 import { Navbar, NavbarBrand, NavbarContent, NavbarItem } from "@nextui-org/navbar";
 import {
   Button,
@@ -12,11 +13,15 @@ import {
 } from "@nextui-org/react";
 import { Link, NavLink, Outlet, useLocation, useNavigate } from "@remix-run/react";
 import { ArrowRightFromLine, MenuIcon, TicketIcon } from "lucide-react";
-import { useState, type ComponentProps, type FC } from "react";
+import { type ComponentProps, type FC, useState } from "react";
+import { Form, useForm } from "react-hook-form";
 import { Drawer } from "vaul";
 import { Footer } from "~/components/Footer";
 import { Logo } from "~/components/Logo";
+import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "~/components/ui/form";
 import { cn } from "~/utils/cn";
+import { createTicketListingInputSchema } from "~/utils/createTicketListingInputSchema";
+// import * as v from "valibot";
 
 const desktopNavLinkStyle =
   "font-medium text-sm h-8 px-3 rounded-lg flex gap-2 items-center justify-center hover:text-gray-700 transition whitespace-nowrap";
@@ -97,6 +102,11 @@ const Layout = () => {
 };
 
 const SellTicketDialog: FC<{ open: boolean; onOpenChange: (state: boolean) => void }> = (props) => {
+  const form = useForm({
+    defaultValues: { priceCents: 0 },
+    resolver: valibotResolver(createTicketListingInputSchema),
+  });
+
   return (
     <Modal size="xl" isOpen={props.open} onOpenChange={props.onOpenChange}>
       <ModalContent>
@@ -104,9 +114,28 @@ const SellTicketDialog: FC<{ open: boolean; onOpenChange: (state: boolean) => vo
           <>
             <ModalHeader className="flex flex-col gap-1">Modal Title</ModalHeader>
             <ModalBody>
-              <Input label="Event Name" />
-              <Input label="Price" />
-              <Input label="Something" />
+              <Form {...form}>
+                <form
+                  onSubmit={form.handleSubmit(async (_values) => {
+                    return;
+                  })}
+                >
+                  <FormField
+                    control={form.control}
+                    name="priceCents"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Name</FormLabel>
+                        <FormControl>
+                          <Input label="Price" {...field} value={String(field.value * 100)} type="number" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <Input label="Something" />
+                </form>
+              </Form>
             </ModalBody>
             <ModalFooter>
               <Button variant="light" onPress={onClose}>

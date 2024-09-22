@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "265d5e70-f8d9-44e1-9af4-a539d6c1aab4",
+  "id": "b5f3f149-7246-435e-90a2-eeecd270799a",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "events": {
@@ -266,6 +266,13 @@
         },
         "ticket_source_id": {
           "name": "ticket_source_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "stripe_product_id": {
+          "name": "stripe_product_id",
           "type": "text",
           "primaryKey": false,
           "notNull": false,

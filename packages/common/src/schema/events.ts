@@ -1,6 +1,7 @@
 import type { InferInsertModel, InferSelectModel } from "drizzle-orm";
 import { relations } from "drizzle-orm";
 import { int, sqliteTable, text } from "drizzle-orm/sqlite-core";
+import * as v from "valibot";
 import { eventTicketSources } from "./eventTicketSources";
 import { sharedColumns } from "./shared/columns";
 
@@ -24,3 +25,10 @@ export const eventRelations = relations(events, (r) => ({
 
 export type Event = InferSelectModel<typeof events>;
 export type NewEvent = InferInsertModel<typeof events>;
+
+export const eventSchema = v.object({
+  name: v.string(),
+  type: v.picklist(eventType),
+  date: v.date(),
+  imageId: v.string(),
+});

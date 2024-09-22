@@ -42,6 +42,7 @@ CREATE TABLE `ticket_listings` (
 	`merchant_id` text NOT NULL,
 	`is_sold` integer DEFAULT false,
 	`ticket_source_id` text,
+	`stripe_product_id` text,
 	FOREIGN KEY (`event_id`) REFERENCES `events`(`id`) ON UPDATE no action ON DELETE no action,
 	FOREIGN KEY (`merchant_id`) REFERENCES `merchants`(`id`) ON UPDATE no action ON DELETE no action,
 	FOREIGN KEY (`ticket_source_id`) REFERENCES `event_ticket_sources`(`id`) ON UPDATE no action ON DELETE no action

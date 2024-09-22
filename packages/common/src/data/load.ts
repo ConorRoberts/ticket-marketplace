@@ -75,15 +75,15 @@ const loaderFunctions: Array<ReturnType<typeof createLoader>> = [
         {
           priceCents: 10_000,
           event: {
-            name: "Tate McRae Concert",
+            name: "Chris Stapleton Concert",
             type: "concert",
             date: dayjs().add(7, "day").toDate(),
-            imageId: "b182c821-dfc7-4534-0d4f-1cbbea4d2800",
+            imageId: "600a760f-480b-450c-9d98-4435f524e300",
           },
           quantity: 5,
           ticketSource: {
             name: "TicketMaster",
-            url: "https://ticketmaster.com/denzel-curry-concert",
+            url: "https://ticketmaster.com/chris-stapleton-concert",
           },
           merchantId: newMerchant.id,
         },
