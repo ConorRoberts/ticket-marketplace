@@ -4,13 +4,13 @@ import { omit } from "remeda";
 import type { DatabaseClient, DatabaseClientTransactionContext } from "../client";
 import {
   events,
+  type NewEvent,
+  type NewEventTicketSource,
+  type NewTicketListing,
   eventTicketSources,
   loaders,
   merchants,
   ticketListings,
-  type NewEvent,
-  type NewEventTicketSource,
-  type NewTicketListing,
 } from "../schema";
 import { env } from "./env";
 

@@ -1,5 +1,4 @@
 import dayjs from "dayjs";
-import { db } from "~/utils/db.server";
 import { env } from "~/utils/env.server";
 
 export const loader = async () => {
@@ -18,12 +17,6 @@ export const loader = async () => {
 
   route({ path: "/", priority: 1 });
 
-  const heroList = await db.query.heroes.findMany();
-
-  for (const hero of heroList) {
-    route({ path: `/hero/${hero.id}` });
-  }
-
   return new Response(
     `
       <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
@@ -34,6 +27,6 @@ export const loader = async () => {
       headers: {
         "Content-Type": "application/xml",
       },
-    }
+    },
   );
 };

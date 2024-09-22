@@ -7,7 +7,8 @@ type Optionals = { description: string; imageId: string; noIndex?: boolean; sepa
 const keywords: string[] = [];
 
 export const FLY_DEPLOY_URL = "ticket-marketplace.fly.dev";
-const WEBSITE_URL = import.meta.env.DEV ? "http://localhost:3000" : "https://ticket-marketplace.fly.dev";
+const WEBSITE_URL =
+  process.env.NODE_ENV === "development" ? "http://localhost:3000" : "https://ticket-marketplace.fly.dev";
 
 export const seo = {
   name: "Ticket Marketplace",

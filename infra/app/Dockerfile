@@ -9,7 +9,7 @@ LABEL fly_launch_runtime="Remix"
 WORKDIR /app
 
 # Install pnpm
-ARG PNPM_VERSION=9.7.0
+ARG PNPM_VERSION=9.11.0
 RUN npm install -g pnpm@$PNPM_VERSION
 
 # Throw-away build stage to reduce size of final image
