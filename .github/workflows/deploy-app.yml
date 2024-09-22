@@ -20,6 +20,6 @@ jobs:
       - uses: actions/checkout@v4
 
       - uses: superfly/flyctl-actions/setup-flyctl@master
-      - run: flyctl deploy --dockerfile ./infra/app/Dockerfile -c ./infra/app/fly.toml
+      - run: flyctl deploy --dockerfile ./infra/app/Dockerfile -c ./infra/app/fly.json
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
