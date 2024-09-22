@@ -72,7 +72,6 @@ export const Layout: FC<PropsWithChildren> = ({ children }) => {
       </head>
       <body className="bg-gray-50">
         {children}
-
         <ScrollRestoration />
         <Scripts />
       </body>
