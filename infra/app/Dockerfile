@@ -23,7 +23,7 @@ RUN apt-get update -qq && \
 ENV NODE_ENV="production"
 
 # Install node modules
-COPY --link package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json drizzle.config.ts ./
+COPY --link package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json drizzle.config.ts .npmrc ./
 COPY --link ./packages/app ./packages/app
 COPY --link ./packages/common ./packages/common
 RUN pnpm install --frozen-lockfile --prod=false
