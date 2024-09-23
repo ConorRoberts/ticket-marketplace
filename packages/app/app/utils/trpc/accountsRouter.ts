@@ -53,4 +53,11 @@ export const accountsRouter = router({
 
       return { url: accountLink.url };
     }),
+  getCurrent: protectedProcedure.query(async ({ ctx }) => {
+    const merchant = await db.query.merchants.findFirst({
+      where: eq(merchants.userId, ctx.user.id),
+    });
+
+    return { merchant };
+  }),
 });

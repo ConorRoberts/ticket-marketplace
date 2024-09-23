@@ -1,8 +1,10 @@
 import { SignedIn, SignedOut, UserButton } from "@clerk/remix";
 import { valibotResolver } from "@hookform/resolvers/valibot";
+import { CalendarDate, getLocalTimeZone, today } from "@internationalized/date";
 import { Navbar, NavbarBrand, NavbarContent, NavbarItem } from "@nextui-org/navbar";
 import {
   Button,
+  Calendar,
   Input,
   Modal,
   ModalBody,
@@ -12,16 +14,55 @@ import {
   useDisclosure,
 } from "@nextui-org/react";
 import { Link, NavLink, Outlet, useLocation, useNavigate } from "@remix-run/react";
-import { ArrowRightFromLine, MenuIcon, TicketIcon } from "lucide-react";
-import { type ComponentProps, type FC, useState } from "react";
-import { Form, useForm } from "react-hook-form";
+import { ArrowRightFromLine, InboxIcon, MenuIcon, TicketIcon } from "lucide-react";
+import { type ComponentProps, type FC, useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+import { toast } from "sonner";
+import * as v from "valibot";
 import { Drawer } from "vaul";
 import { Footer } from "~/components/Footer";
 import { Logo } from "~/components/Logo";
-import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "~/components/ui/form";
+import { Form, FormLabel } from "~/components/ui/form";
+import { FormControl, FormField, FormItem, FormMessage } from "~/components/ui/form";
 import { cn } from "~/utils/cn";
 import { createTicketListingInputSchema } from "~/utils/createTicketListingInputSchema";
-// import * as v from "valibot";
+import { reactApi } from "~/utils/trpc/trpcClient";
+
+const ticketListingFormSchema = v.object({
+  ...v.omit(createTicketListingInputSchema, ["event"]).entries,
+  event: v.object({
+    ...createTicketListingInputSchema.entries.event.entries,
+    date: v.custom((value) => value instanceof CalendarDate),
+  }),
+});
+
+const useStripeAccountChecker = () => {
+  const { data: merchant } = reactApi.merchants.getCurrent.useQuery();
+  const { mutateAsync: createStripeSetupSession } = reactApi.accounts.createStripeSetupSession.useMutation({
+    onSuccess: (data) => {
+      window.location.href = data.url;
+    },
+  });
+
+  useEffect(() => {
+    if (!merchant) {
+      return;
+    }
+
+    if (!merchant.isStripeAccountSetup) {
+      toast.error("Connect a bank account to begin receiving payouts", {
+        action: {
+          label: "Connect",
+          onClick: async () => {
+            toast.promise(createStripeSetupSession({ redirectUrl: window.location.href }), {
+              loading: "Redirecting...",
+            });
+          },
+        },
+      });
+    }
+  }, [merchant, createStripeSetupSession]);
+};
 
 const desktopNavLinkStyle =
   "font-medium text-sm h-8 px-3 rounded-lg flex gap-2 items-center justify-center hover:text-gray-700 transition whitespace-nowrap";
@@ -52,27 +93,32 @@ const MobileNavLink: FC<ComponentProps<typeof NavLink>> = ({ children, className
 };
 
 const Layout = () => {
+  useStripeAccountChecker();
   const location = useLocation();
-  const { isOpen, onOpenChange } = useDisclosure();
+  const { isOpen: isSellModalOpen, onOpenChange: onSellModalOpenChange } = useDisclosure();
+  const { isOpen: isNotificationsModalOpen, onOpenChange: onNotificationsModalOpenChange } = useDisclosure();
   const navigate = useNavigate();
 
   return (
     <>
-      <SellTicketDialog open={isOpen} onOpenChange={onOpenChange} />
+      <SellTicketModal open={isSellModalOpen} onOpenChange={onSellModalOpenChange} />
+      <NotificationsModal open={isNotificationsModalOpen} onOpenChange={onNotificationsModalOpenChange} />
       <div className="flex min-h-screen flex-col relative">
         <div className="flex items-center justify-end isolate z-50 fixed bottom-0 inset-x-0 p-2">
           <MobileNavigation key={location.pathname} />
         </div>
         <Navbar className="w-full max-w-5xl mx-auto hidden lg:block bg-transparent" position="static">
-          <NavbarBrand>
-            <Link to="/">
-              <Logo className="size-8 shadow hover:brightness-[98%] transition" />
-            </Link>
-          </NavbarBrand>
-          <NavbarContent className="flex gap-4 h-16" justify="end">
+          <NavbarContent>
+            <NavbarBrand className="flex-grow-0">
+              <Link to="/">
+                <Logo className="size-8 shadow hover:brightness-[98%] transition" />
+              </Link>
+            </NavbarBrand>
             <NavbarItem>
               <DesktopNavLink to="/">Home</DesktopNavLink>
             </NavbarItem>
+          </NavbarContent>
+          <NavbarContent className="flex gap-4 h-16" justify="end">
             <SignedOut>
               <button type="button" onClick={() => navigate("/login")} className={desktopNavLinkStyle}>
                 <p>Sell Tickets</p>
@@ -84,7 +130,10 @@ const Layout = () => {
               </DesktopNavLink>
             </SignedOut>
             <SignedIn>
-              <button type="button" onClick={() => onOpenChange()} className={desktopNavLinkStyle}>
+              <button type="button" className={desktopNavLinkStyle} onClick={() => onNotificationsModalOpenChange()}>
+                <InboxIcon className="size-4" />
+              </button>
+              <button type="button" onClick={() => onSellModalOpenChange()} className={desktopNavLinkStyle}>
                 <p>Sell Tickets</p>
                 <TicketIcon className="size-4" />
               </button>
@@ -101,50 +150,110 @@ const Layout = () => {
   );
 };
 
-const SellTicketDialog: FC<{ open: boolean; onOpenChange: (state: boolean) => void }> = (props) => {
+const NotificationsModal: FC<{ open: boolean; onOpenChange: (state: boolean) => void }> = (props) => {
+  return (
+    <Modal size="xl" isOpen={props.open} onOpenChange={props.onOpenChange}>
+      <ModalContent>
+        {(onClose) => (
+          <>
+            <ModalHeader className="flex flex-col gap-1">Notifications</ModalHeader>
+            <ModalBody>Notifications</ModalBody>
+            <ModalFooter>
+              <Button variant="light" onPress={onClose}>
+                Close
+              </Button>
+            </ModalFooter>
+          </>
+        )}
+      </ModalContent>
+    </Modal>
+  );
+};
+
+const SellTicketModal: FC<{ open: boolean; onOpenChange: (state: boolean) => void }> = (props) => {
   const form = useForm({
-    defaultValues: { priceCents: 0 },
-    resolver: valibotResolver(createTicketListingInputSchema),
+    defaultValues: {
+      priceCents: 0.0,
+      quantity: 1,
+      event: {
+        name: "",
+        date: today(getLocalTimeZone()),
+        type: "concert" as const,
+        imageId: "",
+      },
+    },
+    resolver: valibotResolver(ticketListingFormSchema),
   });
+  const { mutateAsync: createListing, isPending: isCreateListingLoading } = reactApi.listings.create.useMutation();
 
   return (
     <Modal size="xl" isOpen={props.open} onOpenChange={props.onOpenChange}>
       <ModalContent>
         {(onClose) => (
           <>
-            <ModalHeader className="flex flex-col gap-1">Modal Title</ModalHeader>
+            <ModalHeader className="flex flex-col gap-1">Create Listing</ModalHeader>
             <ModalBody>
               <Form {...form}>
                 <form
-                  onSubmit={form.handleSubmit(async (_values) => {
-                    return;
+                  onSubmit={form.handleSubmit(async (values) => {
+                    await createListing({
+                      ...values,
+                      event: { ...values.event, date: values.event.date.toDate(getLocalTimeZone()) },
+                    });
+                    onClose();
                   })}
+                  className="flex flex-col gap-4"
                 >
                   <FormField
                     control={form.control}
-                    name="priceCents"
+                    name="event.name"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Name</FormLabel>
                         <FormControl>
-                          <Input label="Price" {...field} value={String(field.value * 100)} type="number" />
+                          <Input label="Event Name" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
-                  <Input label="Something" />
+                  <FormField
+                    control={form.control}
+                    name="event.date"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-col ">
+                        <FormLabel>Event Date</FormLabel>
+                        <FormControl>
+                          <Calendar
+                            value={field.value}
+                            onChange={(value) => {
+                              field.onChange(value);
+                            }}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="priceCents"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormControl>
+                          <Input label="Price" {...field} value={String(field.value)} type="number" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <ModalFooter>
+                    <Button className="w-full" color="primary" type="submit" isLoading={isCreateListingLoading}>
+                      Create
+                    </Button>
+                  </ModalFooter>
                 </form>
               </Form>
             </ModalBody>
-            <ModalFooter>
-              <Button variant="light" onPress={onClose}>
-                Close
-              </Button>
-              <Button color="primary" onPress={onClose}>
-                Action
-              </Button>
-            </ModalFooter>
           </>
         )}
       </ModalContent>

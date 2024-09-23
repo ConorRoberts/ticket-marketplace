@@ -89,7 +89,7 @@ const App = () => {
           <div>
             <Outlet />
           </div>
-          <Toaster />
+          <Toaster richColors />
         </div>
       </TrpcProvider>
     </NextUIProvider>
