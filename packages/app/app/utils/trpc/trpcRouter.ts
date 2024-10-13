@@ -4,6 +4,7 @@ import { ticketListingsRouter } from "./ticketListingsRouter";
 import { createContext } from "./trpcContext";
 import { router, t } from "./trpcServerConfig";
 import { merchantsRouter } from "./merchantsRouter";
+import { notificationsRouter } from "./notificationsRouter";
 
 export const createCaller = async (args: LoaderFunctionArgs | ActionFunctionArgs) => {
   const ctx = await createContext(args);
@@ -14,6 +15,7 @@ export const trpcRouter = router({
   listings: ticketListingsRouter,
   accounts: accountsRouter,
   merchants: merchantsRouter,
+  notifications: notificationsRouter,
 });
 
 export type TrpcRouter = typeof trpcRouter;

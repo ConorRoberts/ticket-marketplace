@@ -48,7 +48,7 @@
     "valibot": "catalog:"
   },
   "devDependencies": {
-    "tsup": "^8.2.4",
+    "tsup": "catalog:",
     "typescript": "catalog:"
   }
 }

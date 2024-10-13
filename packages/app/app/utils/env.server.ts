@@ -21,8 +21,8 @@ export const env = createEnv({
     PUBLIC_MAPBOX_TOKEN: v.string(),
     MAPBOX_PRIVATE_TOKEN: v.string(),
 
-    // CLOUDFLARE_ACCOUNT_ID: v.string(),
-    // CLOUDFLARE_IMAGES_API_KEY: v.string(),
+    CLOUDFLARE_ACCOUNT_ID: v.string(),
+    CLOUDFLARE_IMAGES_API_KEY: v.string(),
 
     PORT: v.pipe(
       v.optional(v.string(), "3000"),

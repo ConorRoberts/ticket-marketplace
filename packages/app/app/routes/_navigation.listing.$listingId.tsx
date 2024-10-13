@@ -1,3 +1,4 @@
+import { Button } from "@nextui-org/react";
 import type { MetaFunction } from "@remix-run/node";
 import { useLoaderData } from "@remix-run/react";
 import { type LoaderFunctionArgs, redirect } from "@remix-run/server-runtime";
@@ -43,6 +44,8 @@ const Route = () => {
   return (
     <Page>
       <h1>{loaderData.listing.event.name}</h1>
+
+      <Button>Buy</Button>
     </Page>
   );
 };

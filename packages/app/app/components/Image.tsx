@@ -1,25 +1,36 @@
 import { Image as NextUiImage } from "@nextui-org/image";
 import type { ComponentProps, FC } from "react";
+import { omit } from "remeda";
 import { cn } from "~/utils/cn";
 import { images } from "~/utils/images";
 
 export const Image: FC<
-  ComponentProps<typeof NextUiImage> & {
-    width: number;
-    imageId: string;
+  Omit<ComponentProps<typeof NextUiImage>, "width"> & {
     className?: string;
-  }
-> = ({ className, imageId, width, ...props }) => {
+  } & ({ imageId: string; width: number } | { src: string })
+> = ({ className, ...props }) => {
+  const formattedProps = (() => {
+    if ("imageId" in props) {
+      return omit(props, ["imageId", "width"]);
+    }
+
+    return omit(props, ["src"]);
+  })();
+
   return (
     <NextUiImage
-      {...props}
+      {...formattedProps}
       removeWrapper
       classNames={{
         img: cn("w-full h-full object-cover", className),
       }}
-      src={images.optimizeId(imageId, {
-        width,
-      })}
+      src={
+        "imageId" in props
+          ? images.optimizeId(props.imageId, {
+              width: props.width,
+            })
+          : props.src
+      }
     />
   );
 };

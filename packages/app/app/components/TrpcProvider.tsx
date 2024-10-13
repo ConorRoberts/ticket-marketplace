@@ -1,19 +1,26 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { useState, type FC, type PropsWithChildren } from "react";
-import { apiClient, reactApi } from "~/utils/trpc/trpcClient";
+import { type FC, type PropsWithChildren, useState } from "react";
+import { toast } from "sonner";
+import { trpc, trpcClient } from "~/utils/trpc/trpcClient";
 
 export const TrpcProvider: FC<PropsWithChildren> = (props) => {
-  const [queryClient] = useState(
-    () =>
-      new QueryClient({
-        defaultOptions: { queries: { staleTime: 5000 } },
-      })
-  );
+  const [queryClient] = useState(() => {
+    const client = new QueryClient({
+      defaultOptions: {
+        queries: { staleTime: 5000 },
+        mutations: {
+          onError: (e) => {
+            toast.error(e.message);
+          },
+        },
+      },
+    });
+
+    return client;
+  });
   return (
-    <reactApi.Provider client={apiClient} queryClient={queryClient}>
-      <QueryClientProvider client={queryClient}>
-        {props.children}
-      </QueryClientProvider>
-    </reactApi.Provider>
+    <trpc.Provider client={trpcClient} queryClient={queryClient}>
+      <QueryClientProvider client={queryClient}>{props.children}</QueryClientProvider>
+    </trpc.Provider>
   );
 };

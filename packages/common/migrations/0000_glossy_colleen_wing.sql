@@ -32,6 +32,7 @@ CREATE TABLE `merchants` (
 	`is_stripe_account_setup` integer DEFAULT false
 );
 --> statement-breakpoint
+CREATE UNIQUE INDEX `merchants_user_id_unique` ON `merchants` (`user_id`);--> statement-breakpoint
 CREATE TABLE `ticket_listings` (
 	`id` text PRIMARY KEY NOT NULL,
 	`created_at` integer NOT NULL,
@@ -58,4 +59,11 @@ CREATE TABLE `ticket_listing_transactions` (
 	FOREIGN KEY (`ticket_listing_id`) REFERENCES `ticket_listings`(`id`) ON UPDATE no action ON DELETE no action
 );
 --> statement-breakpoint
-CREATE UNIQUE INDEX `merchants_user_id_unique` ON `merchants` (`user_id`);
+CREATE TABLE `notifications` (
+	`id` text PRIMARY KEY NOT NULL,
+	`created_at` integer NOT NULL,
+	`updated_at` integer NOT NULL,
+	`user_id` text NOT NULL,
+	`message` text NOT NULL,
+	`url` text
+);

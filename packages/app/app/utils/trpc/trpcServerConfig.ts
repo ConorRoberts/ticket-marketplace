@@ -3,6 +3,7 @@ import { merchants } from "common/schema";
 import { eq } from "drizzle-orm";
 import superjson from "superjson";
 import { db } from "../db.server";
+import { logger } from "../logger";
 import type { Context } from "./trpcContext";
 
 export const t = initTRPC.context<Context>().create({
@@ -20,7 +21,7 @@ const loggerMiddleware = t.middleware(async ({ next, path, type, ctx, getRawInpu
     headers: process.env.NODE_ENV === "production" ? Object.fromEntries(ctx.request.headers.entries()) : undefined,
   });
 
-  requestLogger.info("API Request");
+  requestLogger.info("TRPC Request");
 
   return next({ ctx: { ...ctx, logger: requestLogger } });
 });
@@ -67,16 +68,18 @@ export const validatedMerchantProcedure = merchantProcedure.use(async ({ next, c
   const stripeAccountId = ctx.merchant.stripeAccountId;
 
   if (!stripeAccountId) {
+    logger.error(`Merchant id=${ctx.merchant.id} does not have a Stripe account ID`);
     throw new TRPCError({
-      code: "INTERNAL_SERVER_ERROR",
-      message: `Merchant id=${ctx.merchant.id} does not have a Stripe account ID`,
+      code: "BAD_REQUEST",
+      message: "Merchant Stripe account not setup",
     });
   }
 
   if (!ctx.merchant.isStripeAccountSetup) {
+    logger.error(`Merchant id=${ctx.merchant.id} does not have a setup Stripe account`);
     throw new TRPCError({
       code: "INTERNAL_SERVER_ERROR",
-      message: `Merchant id=${ctx.merchant.id} does not have a setup Stripe account`,
+      message: "Merchant Stripe account not setup",
     });
   }
 
