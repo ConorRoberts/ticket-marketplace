@@ -20,7 +20,6 @@
     "@pulumi/pulumi": "3.134.1",
     "common": "workspace:*",
     "consola": "3.2.3",
-    "iot-authorizer": "workspace:*",
     "remeda": "^2.12.0"
   },
   "devDependencies": {
