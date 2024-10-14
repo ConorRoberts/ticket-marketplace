@@ -1,4 +1,4 @@
-name: Deploy Staging Infrastructure
+name: Deploy Infrastructure
 on:
   push:
     branches:
@@ -19,7 +19,7 @@ jobs:
         name: Install pnpm
         with:
           run_install: |
-            - args: [--filter, infra]
+            - args: [--filter, infra, --filter, common]
 
       - name: Install Node.js
         uses: actions/setup-node@v4
@@ -31,7 +31,7 @@ jobs:
       - uses: pulumi/actions@v6
 
       - name: Deploy
-        run: pnpm -F infra pulumi:deploy
+        run: pnpm infra:up
         env:
           PULUMI_STACK: production
           PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
