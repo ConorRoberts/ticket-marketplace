@@ -8,8 +8,8 @@ import { eq } from "drizzle-orm";
 import { SettingsIcon, TicketIcon, TrashIcon } from "lucide-react";
 import { Image } from "~/components/Image";
 import { LoadingSpinner } from "~/components/LoadingSpinner";
-import { NoiseFilter } from "~/components/NoiseFilter";
 import { Page } from "~/components/Page";
+import { Noise } from "~/components/frostin-ui";
 import { createMetadata } from "~/utils/createMetadata";
 import { db } from "~/utils/db.server";
 import { trpc } from "~/utils/trpc/trpcClient";
@@ -73,7 +73,7 @@ const Route = () => {
       <div className="grid lg:grid-cols-2 gap-8 lg:gap-16">
         <div className="w-full max-h-[500px] relative rounded-[30px] overflow-hidden">
           <div className="z-[1] absolute inset-0 opacity-35">
-            <NoiseFilter className="w-full h-full" />
+            <Noise grainSize={1.5} />
           </div>
           <Image
             imageId={loaderData.listing.event.imageId ?? ""}
@@ -88,9 +88,9 @@ const Route = () => {
         <div className="relative flex flex-col gap-4 lg:py-8">
           {isAdmin && (
             <Dropdown>
-              <DropdownTrigger>
+              <DropdownTrigger className="ml-auto">
                 <Button isIconOnly size="sm" variant="light">
-                  <SettingsIcon className="size-4" />
+                  <SettingsIcon className="size-5" />
                 </Button>
               </DropdownTrigger>
               <DropdownMenu
@@ -114,6 +114,7 @@ const Route = () => {
             </Dropdown>
           )}
           <h1 className="font-extrabold text-4xl text-center lg:text-left">{loaderData.listing.event.name}</h1>
+          <p>{loaderData.listing.description}</p>
           <Button
             className="w-full mt-auto"
             color="primary"

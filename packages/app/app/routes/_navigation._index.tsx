@@ -4,8 +4,8 @@ import { and, eq, isNull } from "drizzle-orm";
 import type { FC } from "react";
 import { ClientDate } from "~/components/ClientDate";
 import { Image } from "~/components/Image";
-import { NoiseFilter } from "~/components/NoiseFilter";
 import { Page } from "~/components/Page";
+import { Noise } from "~/components/frostin-ui";
 import { createMetadata } from "~/utils/createMetadata";
 import { db } from "~/utils/db.server";
 
@@ -54,9 +54,7 @@ const TicketListingPreview: FC<{ data: Awaited<ReturnType<typeof loader>>["listi
             </p>
           </div>
         </div>
-        <div className="z-[2] absolute inset-0 opacity-35">
-          <NoiseFilter className="w-full h-full" />
-        </div>
+        <Noise grainSize={1.5} className="z-[2]" />
         <div className="w-full overflow-hidden absolute z-[1] inset-0 blur-lg">
           <Image
             imageId={props.data.event.imageId ?? ""}

@@ -24,6 +24,7 @@ export const ticketListings = sqliteTable(
     stripeProductId: text("stripe_product_id"),
     stripePriceId: text("stripe_price_id"),
     deletedAt: int("deleted_at", { mode: "timestamp_ms" }),
+    description: text("description").notNull().default(""),
   },
   (_table) => ({}),
 );
