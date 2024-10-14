@@ -1,0 +1,32 @@
+{
+  "name": "infra",
+  "private": true,
+  "type": "module",
+  "main": "dist/index.js",
+  "scripts": {
+    "infra:up": "pulumi up -s $PULUMI_STACK -y",
+    "build": "tsup"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@aws-sdk/client-cognito-identity": "3.662.0",
+    "@aws-sdk/client-cognito-identity-provider": "3.662.0",
+    "@aws-sdk/client-iot": "3.658.1",
+    "@aws-sdk/client-s3": "3.666.0",
+    "@pulumi/aws": "6.54.1",
+    "@pulumi/awsx": "2.16.0",
+    "@pulumi/pulumi": "3.134.1",
+    "common": "workspace:*",
+    "consola": "3.2.3",
+    "iot-authorizer": "workspace:*",
+    "remeda": "^2.12.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.7.5",
+    "tsup": "catalog:",
+    "tsx": "4.19.1",
+    "typescript": "catalog:"
+  }
+}

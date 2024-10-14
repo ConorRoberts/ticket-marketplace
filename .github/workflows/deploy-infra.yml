@@ -1,0 +1,39 @@
+name: Deploy Staging Infrastructure
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/deploy-infra.yaml"
+      - "packages/infra/**"
+      - "packages/common/**"
+jobs:
+  deploy-infra:
+    name: Deploy Infrastructure
+    runs-on: ubuntu-latest
+    concurrency: deploy-infrastructure
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        name: Install pnpm
+        with:
+          run_install: |
+            - args: [--filter, infra]
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.11.1
+          cache: "pnpm"
+
+
+      - uses: pulumi/actions@v6
+
+      - name: Deploy
+        run: pnpm -F infra pulumi:deploy
+        env:
+          PULUMI_STACK: production
+          PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.CI_AWS_ACCESS_KEY }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.CI_AWS_SECRET_ACCESS_KEY }}

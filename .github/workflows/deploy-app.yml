@@ -7,7 +7,7 @@ on:
     paths:
       - "packages/common/**"
       - "packages/app/**"
-      - "infra/app/**"
+      - "packages/infra/src/app/**"
       - ".github/workflows/deploy-app.yaml"
       - "package.json"
 
@@ -20,6 +20,6 @@ jobs:
       - uses: actions/checkout@v4
 
       - uses: superfly/flyctl-actions/setup-flyctl@master
-      - run: flyctl deploy --dockerfile ./infra/app/Dockerfile -c ./infra/app/fly.json
+      - run: flyctl deploy --dockerfile ./packages/src/infra/app/Dockerfile -c ./packages/app/src/infra/app/fly.json
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}

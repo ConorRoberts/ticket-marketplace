@@ -1,7 +1,8 @@
-import { Link, useLoaderData, type MetaFunction } from "@remix-run/react";
+import { Link, type MetaFunction, useLoaderData } from "@remix-run/react";
 import { ticketListings } from "common/schema";
-import { eq } from "drizzle-orm";
+import { and, eq, isNull } from "drizzle-orm";
 import type { FC } from "react";
+import { ClientDate } from "~/components/ClientDate";
 import { Image } from "~/components/Image";
 import { Page } from "~/components/Page";
 import { createMetadata } from "~/utils/createMetadata";
@@ -14,7 +15,7 @@ export const meta: MetaFunction = () =>
 
 export const loader = async () => {
   const listings = await db.query.ticketListings.findMany({
-    where: eq(ticketListings.isSold, false),
+    where: and(eq(ticketListings.isSold, false), isNull(ticketListings.deletedAt)),
     with: {
       event: true,
     },
@@ -28,7 +29,7 @@ const Route = () => {
 
   return (
     <Page>
-      <div className="flex justify-start gap-4 items-center">
+      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {loaderData.listings.map((e) => (
           <TicketListingPreview key={e.id} data={e} />
         ))}
@@ -39,12 +40,18 @@ const Route = () => {
 
 const TicketListingPreview: FC<{ data: Awaited<ReturnType<typeof loader>>["listings"][number] }> = (props) => {
   return (
-    <Link className="h-80 relative w-56 flex flex-col gap-4" to={`/listing/${props.data.id}`}>
+    <Link
+      className="h-64 relative w-full flex flex-col gap-4 flex-grow-0 flex-shrink-0 hover:brightness-[90%] bg-transparent transition"
+      to={`/listing/${props.data.id}`}
+    >
       <div className="w-full overflow-hidden flex-1">
         <Image imageId={props.data.event.imageId ?? ""} width={300} className="rounded-none" />
       </div>
-      <div className="z-10 flex flex-col justify-end">
+      <div className="flex flex-col justify-end">
         <p className="font-semibold">{props.data.event.name}</p>
+        <p className="text-xs font-medium text-gray-600">
+          <ClientDate date={props.data.event.date} format="DD/MM/YYYY" />
+        </p>
       </div>
     </Link>
   );

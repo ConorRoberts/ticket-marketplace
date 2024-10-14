@@ -70,9 +70,9 @@ const useSendStripeAccountToast = () => {
 };
 
 const useStripeAccountChecker = () => {
-  const { isLoaded } = useUser();
+  const { isSignedIn = false } = useUser();
   const { data: merchant } = trpc.merchants.getCurrent.useQuery(undefined, {
-    enabled: isLoaded,
+    enabled: isSignedIn,
     staleTime: Infinity,
   });
 
@@ -120,9 +120,13 @@ const MobileNavLink: FC<ComponentProps<typeof NavLink>> = ({ children, className
 const Layout = () => {
   useStripeAccountChecker();
   const location = useLocation();
+  const { isSignedIn = false } = useUser();
   const { isOpen: isSellModalOpen, onOpenChange: onSellModalOpenChange } = useDisclosure();
   const { isOpen: isNotificationsModalOpen, onOpenChange: onNotificationsModalOpenChange } = useDisclosure();
-  const { data: merchant } = trpc.merchants.getCurrent.useQuery(undefined, { staleTime: Infinity });
+  const { data: merchant } = trpc.merchants.getCurrent.useQuery(undefined, {
+    staleTime: Infinity,
+    enabled: isSignedIn,
+  });
   const navigate = useNavigate();
   const sendToast = useSendStripeAccountToast();
 
@@ -189,7 +193,8 @@ const Layout = () => {
 };
 
 const NotificationsModal: FC<{ open: boolean; onOpenChange: (state: boolean) => void }> = (props) => {
-  const { data: _notifications } = trpc.notifications.getAll.useQuery();
+  const { isSignedIn = false } = useUser();
+  const { data: _notifications } = trpc.notifications.getAll.useQuery(undefined, { enabled: isSignedIn });
 
   return (
     <Modal size="xl" isOpen={props.open} onOpenChange={props.onOpenChange}>

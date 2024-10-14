@@ -32,6 +32,10 @@ export const accountsRouter = router({
       const acc = await stripe.accounts.create({
         email: ctx.user.primaryEmailAddress?.emailAddress ?? undefined,
         type: "express",
+        business_profile: {
+          url: `${env.server.PUBLIC_WEBSITE_URL}/merchants/${merchant.id}`,
+          name: ctx.user.fullName ?? undefined,
+        },
         capabilities: {
           card_payments: { requested: true },
           transfers: {

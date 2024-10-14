@@ -15,17 +15,13 @@
       "types": "./dist/schema.d.ts",
       "default": "./dist/schema.js"
     },
-    "./logger": {
-      "types": "./dist/logger.d.ts",
-      "default": "./dist/logger.js"
-    },
     "./cache": {
       "types": "./dist/cache.d.ts",
       "default": "./dist/cache.js"
     },
-    "./env": {
-      "types": "./dist/env.d.ts",
-      "default": "./dist/env.js"
+    "./scripts": {
+      "types": "./dist/scripts.d.ts",
+      "default": "./dist/scripts.js"
     },
     ".": {
       "types": "./dist/index.d.ts",
@@ -48,6 +44,8 @@
     "valibot": "catalog:"
   },
   "devDependencies": {
+    "consola": "3.2.3",
+    "jszip": "3.10.1",
     "tsup": "catalog:",
     "typescript": "catalog:"
   }

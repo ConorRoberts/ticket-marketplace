@@ -1,6 +1,6 @@
 import { TRPCError } from "@trpc/server";
 import { events, ticketListings } from "common/schema";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { omit } from "remeda";
 import * as v from "valibot";
 import { createTicketListingInputSchema } from "../createTicketListingInputSchema";
@@ -15,6 +15,7 @@ export const ticketListingsRouter = router({
     .input(v.parser(createTicketListingInputSchema))
     .mutation(async ({ ctx, input }) => {
       let stripeProductId: string | null = null;
+      let stripePriceId: string | null = null;
 
       if (input.priceCents > 0) {
         const product = await stripe.products.create(
@@ -29,13 +30,27 @@ export const ticketListingsRouter = router({
         );
 
         stripeProductId = product.id;
+
+        if (!product.default_price) {
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "Error creating Stripe price for new listing",
+          });
+        }
+
+        console.log(product.default_price);
+        stripePriceId = typeof product.default_price === "string" ? product.default_price : product.default_price.id;
       }
 
       return await db.transaction(async (tx) => {
         const newEvent = await tx.insert(events).values(input.event).returning().get();
-        const newListing = await tx
-          .insert(ticketListings)
-          .values({ ...omit(input, ["event"]), stripeProductId, eventId: newEvent.id, merchantId: ctx.merchant.id });
+        const newListing = await tx.insert(ticketListings).values({
+          ...omit(input, ["event"]),
+          stripeProductId,
+          stripePriceId,
+          eventId: newEvent.id,
+          merchantId: ctx.merchant.id,
+        });
 
         return { ...newListing, event: newEvent };
       });
@@ -77,6 +92,8 @@ export const ticketListingsRouter = router({
       const session = await stripe.checkout.sessions.create(
         {
           return_url: env.server.PUBLIC_WEBSITE_URL,
+          ui_mode: "embedded",
+          mode: "payment",
           line_items: [
             {
               adjustable_quantity: {
@@ -84,6 +101,7 @@ export const ticketListingsRouter = router({
                 minimum: 1,
                 maximum: listing.quantity,
               },
+              quantity: 1,
               price: listing.stripePriceId,
             },
           ],
@@ -97,5 +115,24 @@ export const ticketListingsRouter = router({
       }
 
       return { url: session.url };
+    }),
+  delete: validatedMerchantProcedure
+    .input(v.parser(v.object({ listingId: v.string() })))
+    .mutation(async ({ ctx, input }) => {
+      const listing = await db.query.ticketListings.findFirst({
+        where: and(eq(ticketListings.id, input.listingId), eq(ticketListings.merchantId, ctx.merchant.id)),
+      });
+
+      if (!listing) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: "Listing does not exist" });
+      }
+
+      await db.update(ticketListings).set({ deletedAt: new Date() }).where(eq(ticketListings.id, listing.id));
+
+      if (listing.stripeProductId) {
+        await stripe.products.update(listing.stripeProductId, { active: false });
+      }
+
+      return {};
     }),
 });

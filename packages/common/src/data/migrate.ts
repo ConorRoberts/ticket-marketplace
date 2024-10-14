@@ -1,6 +1,4 @@
 import { createClient } from "@libsql/client";
-import { execSync } from "child_process";
-import { sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/libsql";
 import { migrate } from "drizzle-orm/libsql/migrator";
 import * as schema from "../schema";
@@ -28,19 +26,6 @@ const db = drizzle(
 );
 
 (async () => {
-  execSync("rm -rf ./packages/common/migrations");
-  execSync("pnpm generate");
-
-  // We're cleaning the database every time we run a migration.
-  // This makes sense for now while we have no data that needs to be retained.
-  await db.run(sql`drop table if exists migrations;`);
-  await db.run(sql`drop table if exists loaders;`);
-  await db.run(sql`drop table if exists ticket_listings;`);
-  await db.run(sql`drop table if exists event_ticket_sources;`);
-  await db.run(sql`drop table if exists events;`);
-  await db.run(sql`drop table if exists ticket_listing_transactions;`);
-  await db.run(sql`drop table if exists merchants;`);
-
   console.info("Running migrations");
   await migrate(db, {
     migrationsFolder: "./packages/common/migrations",

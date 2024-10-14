@@ -7,6 +7,7 @@ import { eq } from "drizzle-orm";
 import { Page } from "~/components/Page";
 import { createMetadata } from "~/utils/createMetadata";
 import { db } from "~/utils/db.server";
+import { trpc } from "~/utils/trpc/trpcClient";
 
 export const loader = async (args: LoaderFunctionArgs) => {
   const listingId = args.params.listingId;
@@ -40,12 +41,22 @@ export const meta: MetaFunction<typeof loader> = (args) => {
 
 const Route = () => {
   const loaderData = useLoaderData<typeof loader>();
+  const { mutateAsync: createPurchaseSession, isPending: isCreatingSession } =
+    trpc.listings.createPurchaseSession.useMutation();
 
   return (
     <Page>
       <h1>{loaderData.listing.event.name}</h1>
 
-      <Button>Buy</Button>
+      <Button
+        disabled={isCreatingSession}
+        isLoading={isCreatingSession}
+        onClick={() => {
+          createPurchaseSession({ listingId: loaderData.listing.id, redirectUrl: window.location.href });
+        }}
+      >
+        Buy
+      </Button>
     </Page>
   );
 };

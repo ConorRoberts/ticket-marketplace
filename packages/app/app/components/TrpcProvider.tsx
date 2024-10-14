@@ -1,4 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { TRPCClientError } from "@trpc/client";
 import { type FC, type PropsWithChildren, useState } from "react";
 import { toast } from "sonner";
 import { trpc, trpcClient } from "~/utils/trpc/trpcClient";
@@ -10,7 +11,10 @@ export const TrpcProvider: FC<PropsWithChildren> = (props) => {
         queries: { staleTime: 5000 },
         mutations: {
           onError: (e) => {
-            toast.error(e.message);
+            if (e instanceof TRPCClientError) {
+              console.error(e);
+              toast.error(e.message);
+            }
           },
         },
       },

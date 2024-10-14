@@ -9,13 +9,15 @@
     "migrate": "dotenv -- tsx ./packages/common/src/data/migrate.ts",
     "generate": "dotenv -- drizzle-kit generate",
     "generate:blank": "dotenv -- drizzle-kit generate --custom",
-    "lint": "biome lint packages/*"
+    "lint": "biome lint packages/*",
+    "infra:up": "turbo run build --filter infra && dotenv -- cross-env-shell pulumi up -s $PULUMI_STACK -y -C ./packages/infra"
   },
   "dependencies": {
     "dotenv-cli": "^7.3.0"
   },
   "devDependencies": {
-    "@biomejs/biome": "1.9.3",
+    "@biomejs/biome": "1.9.2",
+    "cross-env": "7.0.3",
     "dotenv-cli": "7.4.2",
     "drizzle-kit": "catalog:",
     "tsx": "4.17.0",
