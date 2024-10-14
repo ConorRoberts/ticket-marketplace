@@ -1,3 +1,4 @@
+import type { OptimizedImageOptions } from "@conorroberts/utils/images";
 import { Image as NextUiImage } from "@nextui-org/image";
 import type { ComponentProps, FC } from "react";
 import { omit } from "remeda";
@@ -7,7 +8,7 @@ import { images } from "~/utils/images";
 export const Image: FC<
   Omit<ComponentProps<typeof NextUiImage>, "width"> & {
     className?: string;
-  } & ({ imageId: string; width: number } | { src: string })
+  } & ({ imageId: string; width: number; options?: Omit<OptimizedImageOptions, "width"> } | { src: string })
 > = ({ className, ...props }) => {
   const formattedProps = (() => {
     if ("imageId" in props) {
@@ -28,6 +29,7 @@ export const Image: FC<
         "imageId" in props
           ? images.optimizeId(props.imageId, {
               width: props.width,
+              ...props.options,
             })
           : props.src
       }

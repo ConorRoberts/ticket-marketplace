@@ -52,7 +52,6 @@ export const useSubscription = (args: {
 
           const parsedData = v.safeParse(pubSubMessageOutputSchema, JSON.parse(message));
 
-          console.log(message);
           if (parsedData.success) {
             if (parsedData.output.publisherId === publisherId) {
               // return;

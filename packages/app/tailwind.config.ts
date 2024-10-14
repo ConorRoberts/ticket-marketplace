@@ -16,14 +16,7 @@ const config: Config = {
       },
     },
   },
-  plugins: [
-    animate,
-    nextui({
-      themes: {
-        light: {},
-      },
-    }),
-  ],
+  plugins: [animate, nextui({})],
 };
 
 export default config;

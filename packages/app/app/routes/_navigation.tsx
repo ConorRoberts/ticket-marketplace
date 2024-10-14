@@ -132,10 +132,14 @@ const Layout = () => {
 
   return (
     <>
-      <SellTicketModal open={isSellModalOpen} onOpenChange={onSellModalOpenChange} />
+      <SellTicketModal
+        open={isSellModalOpen}
+        onOpenChange={onSellModalOpenChange}
+        key={isSellModalOpen ? "true" : "false"}
+      />
       <NotificationsModal open={isNotificationsModalOpen} onOpenChange={onNotificationsModalOpenChange} />
       <div className="flex min-h-screen flex-col relative">
-        <div className="flex items-center justify-end isolate z-50 fixed bottom-0 inset-x-0 p-2">
+        <div className="flex items-center justify-end isolate z-50 fixed bottom-0 inset-x-0 p-2 lg:hidden">
           <MobileNavigation key={location.pathname} />
         </div>
         <Navbar className="w-full max-w-5xl mx-auto hidden lg:block bg-transparent" position="static">
@@ -231,7 +235,7 @@ const SellTicketModal: FC<{ open: boolean; onOpenChange: (state: boolean) => voi
   });
   const { mutateAsync: createListing } = trpc.listings.create.useMutation({
     onSuccess: (data) => {
-      navigate(`/listings/${data.id}`);
+      navigate(`/listing/${data.id}`);
     },
   });
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -262,9 +266,9 @@ const SellTicketModal: FC<{ open: boolean; onOpenChange: (state: boolean) => voi
                       return;
                     }
 
-                    // const imageResponse = images.clientUpload();
                     await createListing({
                       ...values,
+                      priceCents: values.priceCents * 100,
                       event: {
                         ...values.event,
                         date: values.event.date.toDate(getLocalTimeZone()),

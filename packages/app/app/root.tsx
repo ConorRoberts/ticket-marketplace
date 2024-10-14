@@ -83,7 +83,7 @@ const App = () => {
   const navigate = useNavigate();
 
   return (
-    <NextUIProvider navigate={navigate} disableRipple>
+    <NextUIProvider navigate={navigate}>
       <TrpcProvider>
         <div>
           <div>

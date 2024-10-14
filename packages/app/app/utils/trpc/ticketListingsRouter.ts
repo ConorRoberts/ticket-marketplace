@@ -3,6 +3,7 @@ import { events, ticketListings } from "common/schema";
 import { and, eq } from "drizzle-orm";
 import { omit } from "remeda";
 import * as v from "valibot";
+import { createCheckoutMetadata } from "../checkoutMetadataSchema";
 import { createTicketListingInputSchema } from "../createTicketListingInputSchema";
 import { db } from "../db.server";
 import { env } from "../env.server";
@@ -99,15 +100,24 @@ export const ticketListingsRouter = router({
           mode: "payment",
           line_items: [
             {
-              adjustable_quantity: {
-                enabled: true,
-                minimum: 1,
-                maximum: listing.quantity,
-              },
+              adjustable_quantity:
+                listing.quantity > 1
+                  ? {
+                      enabled: true,
+                      minimum: 1,
+                      maximum: listing.quantity,
+                    }
+                  : undefined,
               quantity: 1,
               price: listing.stripePriceId,
             },
           ],
+          metadata: createCheckoutMetadata({
+            type: "ticketPurchase",
+            data: {
+              listingId: listing.id,
+            },
+          }),
         },
         { stripeAccount: listing.merchant.stripeAccountId },
       );
@@ -133,7 +143,11 @@ export const ticketListingsRouter = router({
       await db.update(ticketListings).set({ deletedAt: new Date() }).where(eq(ticketListings.id, listing.id));
 
       if (listing.stripeProductId) {
-        await stripe.products.update(listing.stripeProductId, { active: false });
+        await stripe.products.update(
+          listing.stripeProductId,
+          { active: false },
+          { stripeAccount: ctx.merchant.stripeAccountId },
+        );
       }
 
       return {};

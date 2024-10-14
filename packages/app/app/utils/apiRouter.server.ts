@@ -14,6 +14,7 @@ import { stripe } from "~/utils/stripe";
 import type { UserPrivateMetadata } from "~/utils/userMetadataSchema";
 import { clerk } from "./clerk.server";
 import { images } from "./images";
+import { parseCheckoutMetadata } from "./checkoutMetadataSchema";
 
 const iam = new IAMClient({ region: env.server.PUBLIC_AWS_REGION });
 
@@ -168,6 +169,17 @@ export const apiRouter = (args: LoaderFunctionArgs | ActionFunctionArgs) => {
       }
 
       if (event.type === "checkout.session.completed") {
+        const meta = parseCheckoutMetadata(event.data.object.metadata);
+
+        if (meta.success) {
+          if (meta.output.type === "ticketPurchase") {
+            // Ticket was purchased
+            // Send notification to customer to rate transaction
+            // Send notification to merchant that they sold a ticket
+            // Mark listing as sold
+            // Create transaction
+          }
+        }
         return c.json({});
       }
 

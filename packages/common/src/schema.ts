@@ -5,3 +5,4 @@ export * from "./schema/merchants";
 export * from "./schema/ticketListings";
 export * from "./schema/ticketListingTransactions";
 export * from "./schema/notifications";
+export * from "./schema/ticketListingChatMessages";

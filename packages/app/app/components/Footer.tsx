@@ -5,7 +5,7 @@ import { Logo } from "./Logo";
 
 const FooterLink: FC<ComponentProps<typeof Link>> = ({ className, children, ...props }) => {
   return (
-    <Link {...props} className={cn("font-medium text-sm hover:text-gray-200 transition", className)}>
+    <Link {...props} className={cn("font-medium text-sm hover:text-gray-800 transition", className)}>
       {children}
     </Link>
   );
