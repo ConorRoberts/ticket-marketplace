@@ -38,19 +38,22 @@ export const ticketListingsRouter = router({
           });
         }
 
-        console.log(product.default_price);
         stripePriceId = typeof product.default_price === "string" ? product.default_price : product.default_price.id;
       }
 
       return await db.transaction(async (tx) => {
         const newEvent = await tx.insert(events).values(input.event).returning().get();
-        const newListing = await tx.insert(ticketListings).values({
-          ...omit(input, ["event"]),
-          stripeProductId,
-          stripePriceId,
-          eventId: newEvent.id,
-          merchantId: ctx.merchant.id,
-        });
+        const newListing = await tx
+          .insert(ticketListings)
+          .values({
+            ...omit(input, ["event"]),
+            stripeProductId,
+            stripePriceId,
+            eventId: newEvent.id,
+            merchantId: ctx.merchant.id,
+          })
+          .returning()
+          .get();
 
         return { ...newListing, event: newEvent };
       });
@@ -91,8 +94,8 @@ export const ticketListingsRouter = router({
 
       const session = await stripe.checkout.sessions.create(
         {
-          return_url: env.server.PUBLIC_WEBSITE_URL,
-          ui_mode: "embedded",
+          success_url: env.server.PUBLIC_WEBSITE_URL,
+          cancel_url: env.server.PUBLIC_WEBSITE_URL,
           mode: "payment",
           line_items: [
             {

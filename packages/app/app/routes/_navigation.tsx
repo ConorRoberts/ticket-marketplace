@@ -216,6 +216,7 @@ const NotificationsModal: FC<{ open: boolean; onOpenChange: (state: boolean) => 
 };
 
 const SellTicketModal: FC<{ open: boolean; onOpenChange: (state: boolean) => void }> = (props) => {
+  const navigate = useNavigate();
   const form = useForm({
     defaultValues: {
       priceCents: 0.0,
@@ -228,7 +229,11 @@ const SellTicketModal: FC<{ open: boolean; onOpenChange: (state: boolean) => voi
     },
     resolver: valibotResolver(ticketListingFormSchema),
   });
-  const { mutateAsync: createListing } = trpc.listings.create.useMutation();
+  const { mutateAsync: createListing } = trpc.listings.create.useMutation({
+    onSuccess: (data) => {
+      navigate(`/listings/${data.id}`);
+    },
+  });
   const [imageFile, setImageFile] = useState<File | null>(null);
   const imageUrl = useLocalImageUrl(imageFile);
   const { revalidate } = useRevalidator();

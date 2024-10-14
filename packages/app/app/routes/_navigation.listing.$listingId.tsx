@@ -1,9 +1,11 @@
+import { useUser } from "@clerk/remix";
 import { Button } from "@nextui-org/react";
 import type { MetaFunction } from "@remix-run/node";
-import { useLoaderData } from "@remix-run/react";
+import { useLoaderData, useNavigate } from "@remix-run/react";
 import { type LoaderFunctionArgs, redirect } from "@remix-run/server-runtime";
 import { ticketListings } from "common/schema";
 import { eq } from "drizzle-orm";
+import { TrashIcon } from "lucide-react";
 import { Page } from "~/components/Page";
 import { createMetadata } from "~/utils/createMetadata";
 import { db } from "~/utils/db.server";
@@ -20,6 +22,12 @@ export const loader = async (args: LoaderFunctionArgs) => {
     where: eq(ticketListings.id, listingId),
     with: {
       event: true,
+      merchant: {
+        columns: {
+          id: true,
+          userId: true,
+        },
+      },
     },
   });
 
@@ -40,9 +48,21 @@ export const meta: MetaFunction<typeof loader> = (args) => {
 };
 
 const Route = () => {
+  const navigate = useNavigate();
   const loaderData = useLoaderData<typeof loader>();
   const { mutateAsync: createPurchaseSession, isPending: isCreatingSession } =
-    trpc.listings.createPurchaseSession.useMutation();
+    trpc.listings.createPurchaseSession.useMutation({
+      onSuccess: (data) => {
+        window.location.href = data.url;
+      },
+    });
+  const { mutateAsync: deleteListing, isPending: isDeleteLoading } = trpc.listings.delete.useMutation({
+    onSuccess: () => {
+      navigate("/");
+    },
+  });
+
+  const { user } = useUser();
 
   return (
     <Page>
@@ -57,6 +77,21 @@ const Route = () => {
       >
         Buy
       </Button>
+      {user?.id === loaderData.listing.merchant.userId && (
+        <Button
+          variant="solid"
+          color="danger"
+          className="mx-auto mt-4"
+          startContent={<TrashIcon className="size-4" />}
+          disabled={isDeleteLoading}
+          isLoading={isDeleteLoading}
+          onClick={() => {
+            deleteListing({ listingId: loaderData.listing.id });
+          }}
+        >
+          Delete
+        </Button>
+      )}
     </Page>
   );
 };
