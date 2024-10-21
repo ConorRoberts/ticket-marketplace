@@ -4,7 +4,7 @@ import { getAuth } from "@clerk/remix/ssr.server";
 import { vValidator } from "@hono/valibot-validator";
 import { createId } from "@paralleldrive/cuid2";
 import { type ActionFunctionArgs, type LoaderFunctionArgs, json } from "@remix-run/node";
-import { merchants } from "common/schema";
+import { merchants, ticketListings, ticketListingTransactions } from "common/schema";
 import { Hono } from "hono";
 import { Webhook } from "svix";
 import * as v from "valibot";
@@ -12,9 +12,10 @@ import { db } from "~/utils/db.server";
 import { env } from "~/utils/env.server";
 import { stripe } from "~/utils/stripe";
 import type { UserPrivateMetadata } from "~/utils/userMetadataSchema";
+import { parseCheckoutMetadata } from "./checkoutMetadataSchema";
 import { clerk } from "./clerk.server";
 import { images } from "./images";
-import { parseCheckoutMetadata } from "./checkoutMetadataSchema";
+import { eq } from "drizzle-orm";
 
 const iam = new IAMClient({ region: env.server.PUBLIC_AWS_REGION });
 
@@ -172,12 +173,20 @@ export const apiRouter = (args: LoaderFunctionArgs | ActionFunctionArgs) => {
         const meta = parseCheckoutMetadata(event.data.object.metadata);
 
         if (meta.success) {
-          if (meta.output.type === "ticketPurchase") {
+          const data = meta.output;
+          if (data.type === "ticketPurchase") {
             // Ticket was purchased
+
+            await db.transaction(async (tx) => {
+              await tx
+                .insert(ticketListingTransactions)
+                .values({ ticketListingId: data.data.listingId, buyerUserId: data.data.userId });
+
+              await tx.update(ticketListings).set({ isSold: true }).where(eq(ticketListings.id, data.data.listingId));
+            });
+
             // Send notification to customer to rate transaction
             // Send notification to merchant that they sold a ticket
-            // Mark listing as sold
-            // Create transaction
           }
         }
         return c.json({});

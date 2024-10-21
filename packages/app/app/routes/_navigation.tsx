@@ -225,6 +225,7 @@ const SellTicketModal: FC<{ open: boolean; onOpenChange: (state: boolean) => voi
     defaultValues: {
       priceCents: 0.0,
       quantity: 1,
+      description: "",
       event: {
         name: "",
         date: today(getLocalTimeZone()),
@@ -345,7 +346,7 @@ const SellTicketModal: FC<{ open: boolean; onOpenChange: (state: boolean) => voi
                     render={({ field }) => (
                       <FormItem>
                         <FormControl>
-                          <Input label="Price ($)" {...field} value={String(field.value)} type="number" />
+                          <Input label="Price ($CAD)" {...field} value={String(field.value)} type="number" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>

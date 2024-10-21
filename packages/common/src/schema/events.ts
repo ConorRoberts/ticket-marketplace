@@ -27,8 +27,8 @@ export type Event = InferSelectModel<typeof events>;
 export type NewEvent = InferInsertModel<typeof events>;
 
 export const eventSchema = v.object({
-  name: v.string(),
-  type: v.picklist(eventType),
+  name: v.pipe(v.string(), v.minLength(1, "Name is required")),
+  type: v.picklist(eventType, `Expected one of ${eventType.join(", ")}`),
   date: v.date(),
   imageId: v.string(),
 });

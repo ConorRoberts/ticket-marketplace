@@ -43,7 +43,7 @@ const TicketListingPreview: FC<{ data: Awaited<ReturnType<typeof loader>>["listi
   return (
     <>
       <Link className="w-full relative rounded-2xl overflow-hidden h-80" to={`/listing/${props.data.id}`}>
-        <div className="relative z-10 h-80 w-full flex flex-col rounded-2xl gap-3 flex-grow-0 flex-shrink-0 hover:brightness-[90%] transition border border-gray-100 p-2">
+        <div className="relative z-10 h-80 w-full flex flex-col rounded-2xl gap-3 flex-grow-0 flex-shrink-0 hover:brightness-[90%] transition border border-gray-300/50 p-2">
           <div className="w-full overflow-hidden flex-1 rounded-lg">
             <Image imageId={props.data.event.imageId ?? ""} width={500} className="rounded-none" />
           </div>

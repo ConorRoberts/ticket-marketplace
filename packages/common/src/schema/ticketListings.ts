@@ -23,6 +23,7 @@ export const ticketListings = sqliteTable(
     ticketSourceId: text("ticket_source_id").references(() => eventTicketSources.id),
     stripeProductId: text("stripe_product_id"),
     stripePriceId: text("stripe_price_id"),
+    deliveredAt: int("delivered_at", { mode: "timestamp_ms" }),
     deletedAt: int("deleted_at", { mode: "timestamp_ms" }),
     description: text("description").notNull().default(""),
   },

@@ -1,7 +1,10 @@
 import * as v from "valibot";
 
 export const checkoutMetadataSchema = v.variant("type", [
-  v.object({ type: v.literal("ticketPurchase"), data: v.object({ listingId: v.string() }) }),
+  v.object({
+    type: v.literal("ticketPurchase"),
+    data: v.object({ listingId: v.string(), userId: v.nullish(v.string()) }),
+  }),
 ]);
 
 export type CheckoutMetadata = v.InferOutput<typeof checkoutMetadataSchema>;

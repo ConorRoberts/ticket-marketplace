@@ -1,30 +1,17 @@
 import dayjs from "dayjs";
 import calendarPlugin from "dayjs/plugin/calendar";
 import type { FC } from "react";
-import { useEffect, useState } from "react";
+import { cn } from "~/utils/cn";
+import { useClientDate } from "~/utils/useClientDate";
 dayjs.extend(calendarPlugin);
 
 export const ClientDate: FC<{
   date: Parameters<typeof dayjs>[0];
   format?: string;
   calendar?: boolean;
+  className?: string;
 }> = (props) => {
   const str = useClientDate(props);
 
-  return <>{str}</>;
-};
-
-export const useClientDate: FC<{
-  date: Parameters<typeof dayjs>[0];
-  format?: string;
-  calendar?: boolean;
-}> = (props) => {
-  const [str, setStr] = useState("");
-
-  useEffect(() => {
-    const date = dayjs(props.date);
-    setStr(props.calendar ? date.calendar() : date.format(props.format ?? "dddd MMMM D, YYYY [at] h:mm a"));
-  }, [props]);
-
-  return str;
+  return <span className={cn(props.className)}>{str ? str : <>&#8203;</>}</span>;
 };

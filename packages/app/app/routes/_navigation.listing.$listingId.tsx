@@ -1,5 +1,16 @@
 import { useUser } from "@clerk/remix";
-import { Button, Dropdown, DropdownItem, DropdownMenu, DropdownTrigger } from "@nextui-org/react";
+import {
+  Button,
+  Dropdown,
+  DropdownItem,
+  DropdownMenu,
+  DropdownTrigger,
+  Modal,
+  ModalContent,
+  ModalFooter,
+  ModalHeader,
+  useDisclosure,
+} from "@nextui-org/react";
 import type { MetaFunction } from "@remix-run/node";
 import { useLoaderData, useNavigate } from "@remix-run/react";
 import { type LoaderFunctionArgs, redirect } from "@remix-run/server-runtime";
@@ -10,6 +21,7 @@ import { Image } from "~/components/Image";
 import { LoadingSpinner } from "~/components/LoadingSpinner";
 import { Page } from "~/components/Page";
 import { Noise } from "~/components/frostin-ui";
+import { clerk } from "~/utils/clerk.server";
 import { createMetadata } from "~/utils/createMetadata";
 import { db } from "~/utils/db.server";
 import { trpc } from "~/utils/trpc/trpcClient";
@@ -39,7 +51,9 @@ export const loader = async (args: LoaderFunctionArgs) => {
     throw redirect("/");
   }
 
-  return { listing };
+  const merchantUser = await clerk.users.getUser(listing.merchant.userId);
+
+  return { listing, merchantName: merchantUser.fullName };
 };
 
 export const meta: MetaFunction<typeof loader> = (args) => {
@@ -65,19 +79,52 @@ const Route = () => {
     },
   });
 
+  const { isOpen: isDeleteOpen, onOpenChange: onDeleteOpenChange } = useDisclosure();
   const { user } = useUser();
   const isAdmin = user?.id === loaderData.listing.merchant.userId;
 
   return (
     <Page classNames={{ container: "relative" }}>
+      <Modal isOpen={isDeleteOpen} onOpenChange={onDeleteOpenChange}>
+        <ModalContent>
+          {(onClose) => (
+            <>
+              <ModalHeader>
+                Are you sure you want to delete your listing for &quot;{loaderData.listing.event.name}&quot;
+              </ModalHeader>
+
+              <ModalFooter>
+                <Button
+                  variant="light"
+                  onClick={() => {
+                    onClose();
+                  }}
+                >
+                  Go Back
+                </Button>
+                <Button
+                  color="danger"
+                  onClick={async () => {
+                    await deleteListing({ listingId: loaderData.listing.id });
+                    onClose();
+                  }}
+                  isLoading={isDeleteLoading}
+                >
+                  Confirm, Delete
+                </Button>
+              </ModalFooter>
+            </>
+          )}
+        </ModalContent>
+      </Modal>
       <div className="grid lg:grid-cols-2 gap-8 lg:gap-16">
-        <div className="w-full max-h-[500px] relative rounded-[30px] overflow-hidden">
+        <div className="w-full h-[500px] relative rounded-[30px] overflow-hidden">
           <div className="z-[1] absolute inset-0 opacity-35">
             <Noise grainSize={1.5} />
           </div>
           <Image
             imageId={loaderData.listing.event.imageId ?? ""}
-            width={600}
+            width={800}
             options={{ brightness: 6, blur: 80 }}
             className="z-0"
           />
@@ -85,7 +132,7 @@ const Route = () => {
             <Image imageId={loaderData.listing.event.imageId ?? ""} width={600} />
           </div>
         </div>
-        <div className="relative flex flex-col gap-4 lg:py-8">
+        <div className="relative flex flex-col gap-2 lg:py-8">
           {isAdmin && (
             <Dropdown>
               <DropdownTrigger className="ml-auto">
@@ -96,8 +143,9 @@ const Route = () => {
               <DropdownMenu
                 disabledKeys={isDeleteLoading ? ["delete"] : []}
                 onAction={(key) => {
+                  console.log(key);
                   if (key === "delete") {
-                    deleteListing({ listingId: loaderData.listing.id });
+                    onDeleteOpenChange();
                   }
                 }}
               >
@@ -114,6 +162,7 @@ const Route = () => {
             </Dropdown>
           )}
           <h1 className="font-extrabold text-4xl text-center lg:text-left">{loaderData.listing.event.name}</h1>
+          <p>Listed by {loaderData.merchantName}</p>
           <p>{loaderData.listing.description}</p>
           <Button
             className="w-full mt-auto"
