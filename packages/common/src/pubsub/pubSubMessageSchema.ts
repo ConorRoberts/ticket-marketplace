@@ -12,7 +12,9 @@ const defineMessage = <Name extends string, Data extends v.GenericSchema>(args: 
   });
 };
 
-const messageTypes = [defineMessage({ name: "placeholder", data: v.object({}) })] as const;
+const messageTypes = [
+  defineMessage({ name: "ticketPurchase", data: v.object({ transactionId: v.string() }) }),
+] as const;
 
 const pubSubMessageInputSchema = v.variant(
   "type",

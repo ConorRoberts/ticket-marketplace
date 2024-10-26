@@ -1,0 +1,6 @@
+{
+  "$schema": "https://www.partykit.io/schema.json",
+  "name": "ticket-marketplace-party",
+  "main": "src/index.ts",
+  "compatibilityDate": "2024-10-22"
+}

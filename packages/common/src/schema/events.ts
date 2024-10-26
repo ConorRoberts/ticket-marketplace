@@ -14,7 +14,7 @@ export const events = sqliteTable(
     name: text("name").notNull(),
     type: text("type", { enum: eventType }).notNull(),
     date: int("date", { mode: "timestamp_ms" }).notNull(),
-    imageId: text("image_id"),
+    imageId: text("image_id").notNull(),
   },
   (_table) => ({}),
 );

@@ -24,12 +24,9 @@ export const env = createEnv({
     CLOUDFLARE_ACCOUNT_ID: v.string(),
     CLOUDFLARE_IMAGES_API_KEY: v.string(),
 
-    PUBLIC_IOT_ENDPOINT: v.string(),
+    PUBLIC_PARTYKIT_URL: v.string(),
 
-    AWS_ACCESS_KEY_ID: v.string(),
-    AWS_SECRET_ACCESS_KEY: v.string(),
-    PUBLIC_AWS_REGION: v.string(),
-    PUBLIC_AWS_ACCOUNT_ID: v.string(),
+    RESEND_API_KEY: v.string(),
 
     PORT: v.pipe(
       v.optional(v.string(), "3000"),

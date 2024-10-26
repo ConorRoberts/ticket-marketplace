@@ -59,6 +59,50 @@ export const ticketListingsRouter = router({
         return { ...newListing, event: newEvent };
       });
     }),
+  update: validatedMerchantProcedure
+    .input(v.parser(v.object({ listingId: v.string(), data: createTicketListingInputSchema })))
+    .mutation(async ({ ctx, input }) => {
+      let stripePriceId: string | null = null;
+
+      const listing = await ctx.db.query.ticketListings.findFirst({
+        where: eq(ticketListings.id, input.listingId),
+      });
+
+      if (!listing) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: "Could not find listing" });
+      }
+
+      stripePriceId = listing.stripePriceId;
+
+      if (input.data.priceCents < 50 && stripePriceId) {
+        // If the price is now less than the minimum price, disable it
+        await stripe.prices.update(stripePriceId, { active: false }, { stripeAccount: ctx.merchant.stripeAccountId });
+
+        stripePriceId = null;
+      } else if (input.data.priceCents >= 50 && input.data.priceCents !== listing.priceCents) {
+        // If the price has changed, we need to create a new price object
+        const newPrice = await stripe.prices.create({
+          currency: "cad",
+          unit_amount: input.priceCents,
+        });
+      }
+
+      return await db.transaction(async (tx) => {
+        const newEvent = await tx.insert(events).values(input.event).returning().get();
+        const newListing = await tx
+          .insert(ticketListings)
+          .values({
+            ...omit(input, ["event"]),
+            stripePriceId,
+            eventId: newEvent.id,
+            merchantId: ctx.merchant.id,
+          })
+          .returning()
+          .get();
+
+        return { ...newListing, event: newEvent };
+      });
+    }),
   createPurchaseSession: publicProcedure
     .input(v.parser(v.object({ listingId: v.string(), redirectUrl: v.string() })))
     .mutation(async ({ ctx, input }) => {

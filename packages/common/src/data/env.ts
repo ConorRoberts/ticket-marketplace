@@ -9,5 +9,6 @@ export const env = createEnv({
       v.optional(v.picklist(["true", "false"]), "false"),
       v.transform((e) => e === "true"),
     ),
+    CLEAN: v.fallback(v.boolean(), false),
   }),
 });

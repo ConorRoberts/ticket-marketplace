@@ -4,6 +4,7 @@
 **/.sanity
 **/.expo
 **/.cache
+**/.partykit
 
 # dependencies
 **/node_modules

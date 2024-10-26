@@ -10,6 +10,7 @@ export const ticketListingTransactions = sqliteTable(
     ...sharedColumns.common,
     buyerUserId: text("buyer_user_id"),
     buyerRating: int("buyer_rating"),
+    stripeCheckoutSessionId: text("stripe_checkout_session_id"),
     ticketListingId: text("ticket_listing_id")
       .notNull()
       .references(() => ticketListings.id),

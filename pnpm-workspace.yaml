@@ -8,7 +8,7 @@ catalog:
   "@trpc/react-query": ^11.0.0-rc.466
   "@trpc/server": ^11.0.0-rc.466
   typescript: "5.6.3"
-  drizzle-orm: "0.35.2"
+  drizzle-orm: "0.35.3"
   drizzle-kit: "0.26.2"
   valibot: "0.42.1"
   "@paralleldrive/cuid2": "2.2.2"

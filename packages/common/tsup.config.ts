@@ -10,5 +10,6 @@ export default defineConfig({
     index: "src/index.ts",
     cache: "src/cache.ts",
     scripts: "src/scripts.ts",
+    pubsub: "src/pubsub/index.ts",
   },
 });

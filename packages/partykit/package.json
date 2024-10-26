@@ -1,0 +1,16 @@
+{
+	"name": "partykit",
+	"main": "index.js",
+	"scripts": {
+		"dev": "partykit dev",
+		"partykit:deploy": "partykit deploy"
+	},
+	"devDependencies": {
+		"partykit": "0.0.111"
+	},
+	"dependencies": {
+		"@clerk/backend": "1.6.0",
+		"common": "workspace:*",
+		"valibot": "catalog:"
+	}
+}

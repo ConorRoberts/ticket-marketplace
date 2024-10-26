@@ -2,7 +2,7 @@
   "name": "ticket-marketplace",
   "type": "module",
   "scripts": {
-    "dev": "dotenv -- turbo run dev --env-mode=loose --filter=app --filter=common",
+    "dev": "dotenv -- turbo run dev --env-mode=loose --filter=app --filter=common --filter=partykit",
     "dev:all": "dotenv -- turbo run --env-mode=loose dev",
     "build": "dotenv -- turbo run --env-mode=loose build",
     "start:app": "pnpm -F app start",

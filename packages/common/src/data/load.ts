@@ -12,12 +12,18 @@ import {
   merchants,
   ticketListings,
 } from "../schema";
-import { env } from "./env";
+
+interface LoaderOptions {
+  /**
+   * Does this loader run before or after migrations?
+   */
+  mode: "before" | "after";
+}
 
 const createLoader = (
   id: string,
   callback: (args: { tx: DatabaseClientTransactionContext }) => Promise<void> | void,
-  options?: { dev?: boolean },
+  options: LoaderOptions,
 ) => {
   return {
     id,
@@ -43,7 +49,7 @@ const loaderFunctions: Array<ReturnType<typeof createLoader>> = [
         ticketSource: Omit<NewEventTicketSource, "eventId">;
       })[] = [
         {
-          priceCents: 1_000,
+          unitPriceCents: 1_000,
           event: {
             name: "Denzel Curry Concert",
             type: "concert",
@@ -58,7 +64,7 @@ const loaderFunctions: Array<ReturnType<typeof createLoader>> = [
           merchantId: newMerchant.id,
         },
         {
-          priceCents: 1_000,
+          unitPriceCents: 1_000,
           event: {
             name: "Taylor Swift Concert",
             type: "concert",
@@ -73,7 +79,7 @@ const loaderFunctions: Array<ReturnType<typeof createLoader>> = [
           merchantId: newMerchant.id,
         },
         {
-          priceCents: 10_000,
+          unitPriceCents: 10_000,
           event: {
             name: "Chris Stapleton Concert",
             type: "concert",
@@ -102,11 +108,11 @@ const loaderFunctions: Array<ReturnType<typeof createLoader>> = [
           .values({ ...omit(e, ["ticketSource", "event"]), eventId: newEvent.id, ticketSourceId: newTicketSource.id });
       }
     },
-    { dev: true },
+    { mode: "after" },
   ),
 ];
 
-export const runLoaders = async (args: { db: DatabaseClient }) => {
+export const runLoaders = async (args: { db: DatabaseClient; mode: LoaderOptions["mode"] }) => {
   if (loaderFunctions.length === 0) {
     console.log("No pending loaders");
     return;
@@ -126,16 +132,24 @@ export const runLoaders = async (args: { db: DatabaseClient }) => {
 
   const hasLoaderRun = (id: string) => previousLoaderIds.has(id);
 
-  const pendingLoaders = loaderFunctions.filter((e) => !hasLoaderRun(e.id) || (e.options?.dev && env.server.DEV));
+  const pendingLoaders = loaderFunctions.filter((e) => !hasLoaderRun(e.id) && e.options.mode === args.mode);
+
+  if (pendingLoaders.length === 0) {
+    console.log("No pending loaders");
+    return;
+  }
+
   console.log(`Pending loaders - ${pendingLoaders.map((e) => e.id).join(", ")}`);
 
-  for (const loader of pendingLoaders) {
-    await args.db.transaction(async (tx) => {
+  await args.db.transaction(async (tx) => {
+    for (const loader of pendingLoaders) {
       await loader.callback({ tx });
 
       await tx.insert(loaders).values({ id: loader.id });
-    });
 
-    console.log(`Loader Success - ${loader.id}`);
-  }
+      console.log(`Loader Success - ${loader.id}`);
+    }
+  });
+
+  console.log("Commit");
 };

@@ -1,4 +1,5 @@
 import { useUser } from "@clerk/remix";
+import { fromDate, getLocalTimeZone, toCalendarDate } from "@internationalized/date";
 import {
   Button,
   Dropdown,
@@ -16,15 +17,18 @@ import { useLoaderData, useNavigate } from "@remix-run/react";
 import { type LoaderFunctionArgs, redirect } from "@remix-run/server-runtime";
 import { ticketListings } from "common/schema";
 import { eq } from "drizzle-orm";
-import { SettingsIcon, TicketIcon, TrashIcon } from "lucide-react";
+import { PencilIcon, SettingsIcon, TicketIcon, TrashIcon } from "lucide-react";
+import { usePartySocket } from "partysocket/react";
 import { Image } from "~/components/Image";
 import { LoadingSpinner } from "~/components/LoadingSpinner";
 import { Page } from "~/components/Page";
+import { SellTicketModal } from "~/components/SellTicketModal";
 import { Noise } from "~/components/frostin-ui";
 import { clerk } from "~/utils/clerk.server";
 import { createMetadata } from "~/utils/createMetadata";
 import { db } from "~/utils/db.server";
 import { trpc } from "~/utils/trpc/trpcClient";
+import { useEnv } from "~/utils/useEnv";
 
 export const loader = async (args: LoaderFunctionArgs) => {
   const listingId = args.params.listingId;
@@ -79,7 +83,17 @@ const Route = () => {
     },
   });
 
+  const env = useEnv();
+  const _socket = usePartySocket({
+    host: env.PUBLIC_PARTYKIT_URL,
+    room: loaderData.listing.id,
+    onMessage: (e) => {
+      console.log(e);
+    },
+  });
+
   const { isOpen: isDeleteOpen, onOpenChange: onDeleteOpenChange } = useDisclosure();
+  const { isOpen: isEditOpen, onOpenChange: onEditOpenChange } = useDisclosure();
   const { user } = useUser();
   const isAdmin = user?.id === loaderData.listing.merchant.userId;
 
@@ -117,6 +131,21 @@ const Route = () => {
           )}
         </ModalContent>
       </Modal>
+      <SellTicketModal
+        open={isEditOpen}
+        onOpenChange={onEditOpenChange}
+        initialValue={{
+          ...loaderData.listing,
+          event: {
+            ...loaderData.listing.event,
+            date: toCalendarDate(fromDate(loaderData.listing.event.date, getLocalTimeZone())),
+          },
+        }}
+        onSubmit={(data) => {
+          return;
+        }}
+      />
+
       <div className="grid lg:grid-cols-2 gap-8 lg:gap-16">
         <div className="w-full h-[500px] relative rounded-[30px] overflow-hidden">
           <div className="z-[1] absolute inset-0 opacity-35">
@@ -143,12 +172,16 @@ const Route = () => {
               <DropdownMenu
                 disabledKeys={isDeleteLoading ? ["delete"] : []}
                 onAction={(key) => {
-                  console.log(key);
                   if (key === "delete") {
                     onDeleteOpenChange();
+                  } else if (key === "edit") {
+                    onEditOpenChange();
                   }
                 }}
               >
+                <DropdownItem key="edit" startContent={<PencilIcon className="size-4" />}>
+                  Update
+                </DropdownItem>
                 <DropdownItem
                   key="delete"
                   color="danger"
@@ -161,8 +194,11 @@ const Route = () => {
               </DropdownMenu>
             </Dropdown>
           )}
-          <h1 className="font-extrabold text-4xl text-center lg:text-left">{loaderData.listing.event.name}</h1>
-          <p>Listed by {loaderData.merchantName}</p>
+          <div className="flex flex-col">
+            <h1 className="font-extrabold text-4xl text-center lg:text-left">{loaderData.listing.event.name}</h1>
+            <p>Listed by {loaderData.merchantName}</p>
+            <p className="mt-4 font-semibold">{`${loaderData.listing.quantity} Ticket${loaderData.listing.quantity > 1 ? "s" : ""}`}</p>
+          </div>
           <p>{loaderData.listing.description}</p>
           <Button
             className="w-full mt-auto"

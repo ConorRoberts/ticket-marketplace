@@ -1,0 +1,1 @@
+ALTER TABLE `ticket_listings` RENAME COLUMN "price_cents" TO "unit_price_cents";

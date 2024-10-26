@@ -14,7 +14,7 @@ export const ticketListings = sqliteTable(
     eventId: text("event_id")
       .notNull()
       .references(() => events.id),
-    priceCents: int("price_cents").notNull(),
+    unitPriceCents: int("unit_price_cents").notNull(),
     quantity: int("quantity").notNull().default(1),
     merchantId: text("merchant_id")
       .notNull()
