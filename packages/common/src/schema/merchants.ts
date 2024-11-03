@@ -10,7 +10,8 @@ export const merchants = sqliteTable(
     ...sharedColumns.common,
     userId: text("user_id").notNull().unique(),
     stripeAccountId: text("stripe_account_id"),
-    isStripeAccountSetup: int("is_stripe_account_setup", { mode: "boolean" }).default(false),
+    isStripeAccountSetup: int("is_stripe_account_setup", { mode: "boolean" }).default(false).notNull(),
+    isApproved: int("is_approved", { mode: "boolean" }).default(false).notNull(),
   },
   (_table) => ({}),
 );

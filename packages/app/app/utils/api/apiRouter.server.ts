@@ -4,14 +4,17 @@ import { createId } from "@paralleldrive/cuid2";
 import type { ActionFunctionArgs, LoaderFunctionArgs } from "@remix-run/node";
 import { Hono } from "hono";
 import * as v from "valibot";
-import type { RouterContext } from "~/utils/api/middleware/routerContextMiddleware";
+import { type RouterContext, routerContextMiddleware } from "~/utils/api/middleware/routerContextMiddleware";
 import { env } from "~/utils/env.server";
 import { images } from "../images";
 import { devRouter } from "./devRouter";
 import { webhooksRouter } from "./webhooksRouter";
+import { logger } from "hono/logger";
 
 export const apiRouter = (args: LoaderFunctionArgs | ActionFunctionArgs) => {
   const router = new Hono<{ Variables: RouterContext }>()
+    .use(routerContextMiddleware)
+    .use(logger())
     .basePath("/api")
     .get("/health", (c) => {
       return c.var.success({ message: "Success" });

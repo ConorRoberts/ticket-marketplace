@@ -1,3 +1,4 @@
+import consola from "consola";
 import dayjs from "dayjs";
 import { inArray } from "drizzle-orm";
 import { omit } from "remeda";
@@ -114,7 +115,7 @@ const loaderFunctions: Array<ReturnType<typeof createLoader>> = [
 
 export const runLoaders = async (args: { db: DatabaseClient; mode: LoaderOptions["mode"] }) => {
   if (loaderFunctions.length === 0) {
-    console.log("No pending loaders");
+    consola.info(`[${args.mode}] No pending loaders`);
     return;
   }
 
@@ -135,11 +136,11 @@ export const runLoaders = async (args: { db: DatabaseClient; mode: LoaderOptions
   const pendingLoaders = loaderFunctions.filter((e) => !hasLoaderRun(e.id) && e.options.mode === args.mode);
 
   if (pendingLoaders.length === 0) {
-    console.log("No pending loaders");
+    consola.info("No pending loaders");
     return;
   }
 
-  console.log(`Pending loaders - ${pendingLoaders.map((e) => e.id).join(", ")}`);
+  consola.info(`Pending loaders - ${pendingLoaders.map((e) => e.id).join(", ")}`);
 
   await args.db.transaction(async (tx) => {
     for (const loader of pendingLoaders) {
@@ -147,9 +148,9 @@ export const runLoaders = async (args: { db: DatabaseClient; mode: LoaderOptions
 
       await tx.insert(loaders).values({ id: loader.id });
 
-      console.log(`Loader Success - ${loader.id}`);
+      consola.success(`Loader Success - ${loader.id}`);
     }
   });
 
-  console.log("Commit");
+  consola.success("Commit");
 };

@@ -3,7 +3,7 @@ import * as v from "valibot";
 export const checkoutMetadataSchema = v.variant("type", [
   v.object({
     type: v.literal("ticketPurchase"),
-    data: v.object({ listingId: v.string(), userId: v.nullish(v.string()) }),
+    data: v.object({ listingId: v.string(), userId: v.nullish(v.string()), email: v.string() }),
   }),
 ]);
 
@@ -17,7 +17,7 @@ export const parseCheckoutMetadata = (data: any) => {
   return v.safeParse(
     v.pipe(
       v.any(),
-      v.transform((value) => JSON.parse(value.data)),
+      v.transform((value) => JSON.parse(value)),
       checkoutMetadataSchema,
     ),
     data,

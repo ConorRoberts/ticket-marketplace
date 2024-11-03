@@ -53,7 +53,7 @@ const useStripeAccountChecker = () => {
       return;
     }
 
-    if (!merchant.isStripeAccountSetup) {
+    if (!merchant.isStripeAccountSetup && merchant.isApproved) {
       sendToast("Connect a bank account to begin receiving payouts");
     }
   }, [merchant, sendToast]);
@@ -95,6 +95,7 @@ const Layout = () => {
   const { isOpen: isNotificationsModalOpen, onOpenChange: onNotificationsModalOpenChange } = useDisclosure();
   const { data: merchant } = trpc.merchants.getCurrent.useQuery(undefined, {
     staleTime: Infinity,
+    gcTime: Infinity,
     enabled: isSignedIn,
   });
   const navigate = useNavigate();
@@ -154,12 +155,22 @@ const Layout = () => {
                 type="button"
                 variant="light"
                 onClick={() => {
-                  if (!merchant?.isStripeAccountSetup) {
+                  if (!merchant) {
+                    return;
+                  }
+
+                  if (!merchant.isApproved) {
+                    // TODO need to create an "apply" modal
+                    // sendToast("Please connect your bank account before selling tickets.");
+                    return;
+                  }
+                  if (!merchant.isStripeAccountSetup && merchant.isApproved) {
                     sendToast("Please connect your bank account before selling tickets.");
                     return;
                   }
                   onSellModalOpenChange();
                 }}
+                isDisabled={true}
                 className={desktopNavLinkStyle}
               >
                 <p>Sell Tickets</p>

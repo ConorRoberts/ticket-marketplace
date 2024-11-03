@@ -1,6 +1,6 @@
 import type { InferInsertModel, InferSelectModel } from "drizzle-orm";
 import { relations } from "drizzle-orm";
-import { sqliteTable, text } from "drizzle-orm/sqlite-core";
+import { int, sqliteTable, text } from "drizzle-orm/sqlite-core";
 import { sharedColumns } from "./shared/columns";
 
 export const notifications = sqliteTable(
@@ -10,6 +10,7 @@ export const notifications = sqliteTable(
     userId: text("user_id").notNull(),
     message: text("message").notNull(),
     url: text("url"),
+    isDismissed: int("is_dismissed", { mode: "boolean" }).default(false).notNull(),
   },
   (_table) => ({}),
 );

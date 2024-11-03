@@ -19,7 +19,7 @@ export const ticketListings = sqliteTable(
     merchantId: text("merchant_id")
       .notNull()
       .references(() => merchants.id),
-    isSold: int("is_sold", { mode: "boolean" }).default(false),
+    isSold: int("is_sold", { mode: "boolean" }).default(false).notNull(),
     ticketSourceId: text("ticket_source_id").references(() => eventTicketSources.id),
     stripeProductId: text("stripe_product_id"),
     stripePriceId: text("stripe_price_id"),
@@ -46,7 +46,7 @@ export type TicketListing = InferSelectModel<typeof ticketListings>;
 export type NewTicketListing = InferInsertModel<typeof ticketListings>;
 
 export const ticketListingSchema = v.object({
-  priceCents: v.number(),
+  unitPriceCents: v.number(),
   quantity: v.number(),
   isSold: v.optional(v.boolean(), false),
   stripeProductId: v.optional(v.string()),

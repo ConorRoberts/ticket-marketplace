@@ -1,30 +1,40 @@
 import { TRPCError } from "@trpc/server";
-import { events, ticketListings } from "common/schema";
+import { events, eventSchema, ticketListings } from "common/schema";
 import { and, eq } from "drizzle-orm";
 import { omit } from "remeda";
 import * as v from "valibot";
 import { createCheckoutMetadata } from "../checkoutMetadataSchema";
-import { createTicketListingInputSchema } from "../createTicketListingInputSchema";
 import { db } from "../db.server";
 import { env } from "../env.server";
 import { logger } from "../logger";
 import { stripe } from "../stripe";
 import { publicProcedure, router, validatedMerchantProcedure } from "./trpcServerConfig";
+import { ticketListingChatMessagesRouter } from "./ticketListingChatMessagesRouter";
 
 export const ticketListingsRouter = router({
+  chat: ticketListingChatMessagesRouter,
   create: validatedMerchantProcedure
-    .input(v.parser(createTicketListingInputSchema))
+    .input(
+      v.parser(
+        v.object({
+          description: v.string(),
+          quantity: v.pipe(v.number(), v.minValue(1)),
+          unitPriceCents: v.pipe(v.number(), v.minValue(0)),
+          event: eventSchema,
+        }),
+      ),
+    )
     .mutation(async ({ ctx, input }) => {
       let stripeProductId: string | null = null;
       let stripePriceId: string | null = null;
 
-      if (input.priceCents > 0) {
+      if (input.unitPriceCents > 0) {
         const product = await stripe.products.create(
           {
             name: `${input.quantity}x - ${input.event.name}`,
             default_price_data: {
               currency: "cad",
-              unit_amount: input.priceCents,
+              unit_amount: input.unitPriceCents,
             },
           },
           { stripeAccount: ctx.merchant.stripeAccountId },
@@ -60,51 +70,79 @@ export const ticketListingsRouter = router({
       });
     }),
   update: validatedMerchantProcedure
-    .input(v.parser(v.object({ listingId: v.string(), data: createTicketListingInputSchema })))
+    .input(
+      v.parser(
+        v.object({
+          listingId: v.string(),
+          data: v.object({
+            description: v.string(),
+            quantity: v.pipe(v.number(), v.minValue(1)),
+            unitPriceCents: v.pipe(v.number(), v.minValue(0)),
+            event: eventSchema,
+          }),
+        }),
+      ),
+    )
     .mutation(async ({ ctx, input }) => {
       let stripePriceId: string | null = null;
 
       const listing = await ctx.db.query.ticketListings.findFirst({
-        where: eq(ticketListings.id, input.listingId),
+        where: and(eq(ticketListings.id, input.listingId), eq(ticketListings.merchantId, ctx.merchant.id)),
       });
 
       if (!listing) {
         throw new TRPCError({ code: "BAD_REQUEST", message: "Could not find listing" });
       }
 
+      if (!listing.stripeProductId) {
+        logger.error(`Listing id="${listing.id}" does not have a valid Stripe product ID`);
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Listing is invalid" });
+      }
+
       stripePriceId = listing.stripePriceId;
 
-      if (input.data.priceCents < 50 && stripePriceId) {
-        // If the price is now less than the minimum price, disable it
+      if (input.data.unitPriceCents === 0 && stripePriceId) {
+        // If the price is now zero, disable it
         await stripe.prices.update(stripePriceId, { active: false }, { stripeAccount: ctx.merchant.stripeAccountId });
 
         stripePriceId = null;
-      } else if (input.data.priceCents >= 50 && input.data.priceCents !== listing.priceCents) {
+      } else if (input.data.unitPriceCents > 0 && input.data.unitPriceCents !== listing.unitPriceCents) {
         // If the price has changed, we need to create a new price object
-        const newPrice = await stripe.prices.create({
-          currency: "cad",
-          unit_amount: input.priceCents,
-        });
+        const newPrice = await stripe.prices.create(
+          {
+            currency: "cad",
+            unit_amount: input.data.unitPriceCents,
+            product: listing.stripeProductId,
+          },
+          { stripeAccount: ctx.merchant.stripeAccountId },
+        );
+
+        stripePriceId = newPrice.id;
       }
 
       return await db.transaction(async (tx) => {
-        const newEvent = await tx.insert(events).values(input.event).returning().get();
-        const newListing = await tx
-          .insert(ticketListings)
-          .values({
-            ...omit(input, ["event"]),
-            stripePriceId,
-            eventId: newEvent.id,
-            merchantId: ctx.merchant.id,
-          })
+        const updatedEvent = await tx
+          .update(events)
+          .set(input.data.event)
+          .where(eq(events.id, listing.eventId))
           .returning()
           .get();
 
-        return { ...newListing, event: newEvent };
+        const updatedListing = await tx
+          .update(ticketListings)
+          .set({
+            ...omit(input.data, ["event"]),
+            stripePriceId,
+          })
+          .where(eq(ticketListings.id, listing.id))
+          .returning()
+          .get();
+
+        return { ...updatedListing, event: updatedEvent };
       });
     }),
   createPurchaseSession: publicProcedure
-    .input(v.parser(v.object({ listingId: v.string(), redirectUrl: v.string() })))
+    .input(v.parser(v.object({ listingId: v.string(), redirectUrl: v.string(), email: v.string() })))
     .mutation(async ({ ctx, input }) => {
       const listing = await db.query.ticketListings.findFirst({
         where: eq(ticketListings.id, input.listingId),
@@ -160,6 +198,8 @@ export const ticketListingsRouter = router({
             type: "ticketPurchase",
             data: {
               listingId: listing.id,
+              email: input.email,
+              userId: ctx.user?.id ?? null,
             },
           }),
         },

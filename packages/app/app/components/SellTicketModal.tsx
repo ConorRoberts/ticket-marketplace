@@ -13,77 +13,85 @@ import {
   ModalHeader,
 } from "@nextui-org/react";
 import { eventType } from "common/schema";
-import { type FC, useState } from "react";
+import type { FC } from "react";
 import { useForm } from "react-hook-form";
-import { omit } from "remeda";
 import { toast } from "sonner";
 import * as v from "valibot";
 import { Image } from "~/components/Image";
 import { Form } from "~/components/ui/form";
-import { FormControl, FormField, FormItem, FormMessage } from "~/components/ui/form";
+import { FormControl, FormField, FormItem } from "~/components/ui/form";
 import { api } from "~/utils/api/apiClient";
-import { createTicketListingInputSchema } from "~/utils/createTicketListingInputSchema";
+import { imageFormats } from "~/utils/imageFormats";
 import { images } from "~/utils/images";
-import { useLocalImageUrl } from "~/utils/useLocalImageUrl";
 
 const ticketListingFormSchema = v.object({
-  ...v.omit(createTicketListingInputSchema, ["event"]).entries,
+  description: v.string(),
+  quantity: v.string(),
+  unitPriceDollars: v.string(),
   event: v.object({
-    ...v.omit(createTicketListingInputSchema.entries.event, ["imageId"]).entries,
-    date: v.custom<CalendarDate>((value) => value instanceof CalendarDate),
+    name: v.pipe(v.string(), v.minLength(1)),
+    imageId: v.string(),
+    type: v.picklist(eventType),
+    date: v.custom<CalendarDate>(
+      (value) => value instanceof CalendarDate && value.compare(today(getLocalTimeZone())) >= 0,
+      "Must be a date in the future",
+    ),
   }),
 });
 
-type SellTicketFormData = v.InferOutput<typeof ticketListingFormSchema>;
+type TicketListingFormInputData = v.InferOutput<typeof ticketListingFormSchema>;
 
-const getDefaultFormData = (): SellTicketFormData => {
+const getDefaultFormData = (): TicketListingFormInputData => {
   return {
-    priceCents: 0.0,
-    quantity: 1,
+    unitPriceDollars: "0",
+    quantity: "1",
     description: "",
     event: {
       name: "",
       date: today(getLocalTimeZone()),
       type: "concert" as const,
+      imageId: images.imageIds.placeholder.ticketListing,
     },
   };
 };
 
-const getOutputData = (values: SellTicketFormData & { imageId: string }) => {
+const ticketListingFormOutputSchema = v.object({
+  description: v.string(),
+  quantity: v.number(),
+  unitPriceCents: v.number(),
+  event: v.object({
+    name: v.string(),
+    imageId: v.string(),
+    type: v.picklist(eventType),
+    date: v.date(),
+  }),
+});
+type TicketListingFormOutputData = v.InferOutput<typeof ticketListingFormOutputSchema>;
+
+const getOutputData = (values: TicketListingFormInputData): TicketListingFormOutputData => {
   return {
-    ...omit(values, ["imageId"]),
-    priceCents: values.priceCents * 100,
+    ...values,
+    unitPriceCents: Math.floor(Number.parseFloat(values.unitPriceDollars) * 100),
+    quantity: Number.parseInt(values.quantity),
     event: {
       ...values.event,
       date: values.event.date.toDate(getLocalTimeZone()),
-      imageId: values.imageId,
     },
   };
 };
-
-type FormOutputData = ReturnType<typeof getOutputData>;
 
 export const SellTicketModal: FC<{
   open: boolean;
   onOpenChange: (state: boolean) => void;
-  onSubmit: (data: FormOutputData) => void | Promise<void>;
-  initialValue?: SellTicketFormData & { event: SellTicketFormData["event"] & { imageId: string } };
+  onSubmit: (data: TicketListingFormOutputData) => void | Promise<void>;
+  initialValue?: TicketListingFormInputData;
 }> = (props) => {
   const form = useForm({
-    defaultValues: props.initialValue
-      ? {
-          ...omit(props.initialValue, ["event"]),
-          event: omit(props.initialValue.event, ["imageId"]),
-        }
-      : getDefaultFormData(),
+    defaultValues: props.initialValue ? props.initialValue : getDefaultFormData(),
     resolver: valibotResolver(ticketListingFormSchema),
   });
 
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const uploadedImageUrl = useLocalImageUrl(imageFile);
-  const imageUrl = props.initialValue
-    ? images.optimizeId(props.initialValue.event.imageId, { width: 500 })
-    : uploadedImageUrl;
+  const imageUrl = images.optimizeId(form.getValues("event.imageId"), { width: 500 });
 
   return (
     <Modal size="xl" isOpen={props.open} onOpenChange={props.onOpenChange}>
@@ -97,69 +105,62 @@ export const SellTicketModal: FC<{
               <Form {...form}>
                 <form
                   onSubmit={form.handleSubmit(async (values) => {
-                    let imageId: string | null = null;
-
-                    if (imageFile) {
-                      const res = await api.uploadImage.$post({ form: { file: imageFile } });
-                      const uploadResult = await res.json();
-
-                      if (!uploadResult.success) {
-                        console.error(uploadResult.data.message);
-                        toast.error("Error uploading image");
-                        return;
-                      }
-
-                      imageId = uploadResult.data.imageId;
-                    } else if (props.initialValue?.event.imageId) {
-                      imageId = props.initialValue?.event.imageId;
-                    }
-
-                    if (!imageId) {
-                      toast.error("Image is required");
-                      return;
-                    }
-
-                    await props.onSubmit(getOutputData({ ...values, imageId }));
+                    await props.onSubmit(getOutputData(values));
 
                     onClose();
                   })}
                   className="flex flex-col gap-4"
                 >
-                  <Input
-                    label="Image"
-                    type="file"
-                    onChange={(e) => {
-                      const files = e.target.files;
-
-                      if (!files) {
-                        return;
-                      }
-
-                      const f = files[0];
-
-                      if (!f) {
-                        return;
-                      }
-
-                      setImageFile(f);
-                    }}
-                  />
-
                   {imageUrl && (
                     <div className="h-64 overflow-hidden">
                       <Image src={imageUrl} />
                     </div>
                   )}
 
+                  <Input
+                    label="Image"
+                    type="file"
+                    accept={imageFormats.join(",")}
+                    onChange={async (e) => {
+                      const files = e.target.files;
+
+                      if (!files) {
+                        toast.error("Error uploading image");
+                        return;
+                      }
+
+                      const f = files[0];
+
+                      if (!f) {
+                        toast.error("Error uploading image");
+                        return;
+                      }
+
+                      const res = await api.uploadImage.$post({ form: { file: f } });
+                      const uploadResult = await res.json();
+
+                      if (!uploadResult.success) {
+                        toast.error("Error uploading image");
+                        return;
+                      }
+
+                      form.setValue("event.imageId", uploadResult.data.imageId, { shouldTouch: true });
+                    }}
+                  />
+
                   <FormField
                     control={form.control}
                     name="event.name"
-                    render={({ field }) => (
+                    render={({ field, fieldState }) => (
                       <FormItem>
                         <FormControl>
-                          <Input label="Event Name" {...field} />
+                          <Input
+                            label="Event Name"
+                            {...field}
+                            errorMessage={fieldState.error?.message}
+                            isInvalid={Boolean(fieldState.error?.message)}
+                          />
                         </FormControl>
-                        <FormMessage />
                       </FormItem>
                     )}
                   />
@@ -167,7 +168,7 @@ export const SellTicketModal: FC<{
                   <FormField
                     control={form.control}
                     name="event.date"
-                    render={({ field }) => (
+                    render={({ field, fieldState }) => (
                       <FormItem className="flex flex-col ">
                         <FormControl>
                           <DatePicker
@@ -176,43 +177,60 @@ export const SellTicketModal: FC<{
                             onChange={(value) => {
                               field.onChange(value);
                             }}
+                            errorMessage={fieldState.error?.message}
+                            isInvalid={Boolean(fieldState.error?.message)}
                           />
                         </FormControl>
-                        <FormMessage />
                       </FormItem>
                     )}
                   />
                   <FormField
                     control={form.control}
-                    name="priceCents"
-                    render={({ field }) => (
+                    name="unitPriceDollars"
+                    render={({ field, fieldState }) => (
                       <FormItem>
                         <FormControl>
-                          <Input label="Price ($CAD)" {...field} value={String(field.value)} type="number" />
+                          <Input
+                            label="Price ($CAD)"
+                            {...field}
+                            type="number"
+                            errorMessage={fieldState.error?.message}
+                            isInvalid={Boolean(fieldState.error?.message)}
+                          />
                         </FormControl>
-                        <FormMessage />
                       </FormItem>
                     )}
                   />
                   <FormField
                     control={form.control}
                     name="quantity"
-                    render={({ field }) => (
+                    render={({ field, fieldState }) => (
                       <FormItem>
                         <FormControl>
-                          <Input label="Quantity" {...field} value={String(field.value)} type="number" />
+                          <Input
+                            label="Quantity"
+                            {...field}
+                            type="number"
+                            errorMessage={fieldState.error?.message}
+                            isInvalid={Boolean(fieldState.error?.message)}
+                          />
                         </FormControl>
-                        <FormMessage />
                       </FormItem>
                     )}
                   />
                   <FormField
                     control={form.control}
                     name="event.type"
-                    render={({ field }) => (
+                    render={({ field, fieldState }) => (
                       <FormItem>
                         <FormControl>
-                          <Autocomplete label="Event Type" value={field.value} onValueChange={field.onChange}>
+                          <Autocomplete
+                            label="Event Type"
+                            value={field.value}
+                            onValueChange={field.onChange}
+                            errorMessage={fieldState.error?.message}
+                            isInvalid={Boolean(fieldState.error?.message)}
+                          >
                             {eventType.map((e) => (
                               <AutocompleteItem key={e} value={e} className="capitalize">
                                 {/* Capitalize */}
@@ -224,7 +242,6 @@ export const SellTicketModal: FC<{
                             ))}
                           </Autocomplete>
                         </FormControl>
-                        <FormMessage />
                       </FormItem>
                     )}
                   />

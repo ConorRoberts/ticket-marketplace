@@ -1,6 +1,9 @@
 import type { FC } from "react";
 import type { CreateEmailOptions } from "resend";
+import { seo } from "./createMetadata";
 import { resend } from "./resend.server";
+
+const createSubject = (message: string) => `${seo.name} - ${message}`;
 
 export const sendEmail = async <T extends object>(
   options: Omit<CreateEmailOptions, "react" | "html" | "from">,
@@ -11,8 +14,8 @@ export const sendEmail = async <T extends object>(
   await resend.emails.send({
     react: <Component {...react.props} />,
     ...options,
-    subject: `Party Box - ${options.subject}`,
-    from: "Party Box <noreply@partybox.im>",
+    subject: createSubject(options.subject),
+    from: `${seo.name} <noreply@partybox.im>`,
   });
 };
 
@@ -25,8 +28,8 @@ export const sendBatchEmail = async <T extends object>(
     return {
       react: <Component {...e.react.props} />,
       ...e.options,
-      subject: `Party Box - ${e.options.subject}`,
-      from: "Party Box <noreply@partybox.im>",
+      subject: createSubject(e.options.subject),
+      from: `${seo.name} <noreply@partybox.im>`,
     };
   });
 

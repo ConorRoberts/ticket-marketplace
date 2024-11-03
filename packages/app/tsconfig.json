@@ -6,7 +6,8 @@
 		"**/.server/**/*.tsx",
 		"**/.client/**/*.ts",
 		"**/.client/**/*.tsx",
-		"!./server.js"
+		"!./server.js",
+		"app/components/emails/TicketListingPurchaseConfirmationEmail.txs"
 	],
 	"compilerOptions": {
 		"lib": ["DOM", "DOM.Iterable", "ES2022"],

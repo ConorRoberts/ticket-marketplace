@@ -2,8 +2,10 @@ import { TRPCError, initTRPC } from "@trpc/server";
 import { merchants } from "common/schema";
 import { eq } from "drizzle-orm";
 import superjson from "superjson";
+import * as v from "valibot";
 import { db } from "../db.server";
 import { logger } from "../logger";
+import { userPublicMetadataSchema } from "../userMetadataSchema";
 import type { Context } from "./trpcContext";
 
 export const t = initTRPC.context<Context>().create({
@@ -26,26 +28,26 @@ const loggerMiddleware = t.middleware(async ({ next, path, type, ctx, getRawInpu
   return next({ ctx: { ...ctx, logger: requestLogger } });
 });
 
-const isAuthed = t.middleware(async ({ next, ctx }) => {
+export const router = t.router;
+
+export const publicProcedure = t.procedure.use(loggerMiddleware);
+
+export const protectedProcedure = publicProcedure.use(async ({ next, ctx }) => {
   const user = ctx.user;
 
   if (!user) {
     throw new TRPCError({ code: "UNAUTHORIZED" });
   }
 
+  const publicMetadata = v.parse(userPublicMetadataSchema, user.publicMetadata);
+
   return next({
     ctx: {
       ...ctx,
-      user,
+      user: { ...user, publicMetadata },
     },
   });
 });
-
-export const router = t.router;
-
-export const publicProcedure = t.procedure.use(loggerMiddleware);
-
-export const protectedProcedure = publicProcedure.use(isAuthed);
 
 export const merchantProcedure = protectedProcedure.use(async ({ next, ctx }) => {
   const merchant = await db.query.merchants.findFirst({
@@ -86,4 +88,15 @@ export const validatedMerchantProcedure = merchantProcedure.use(async ({ next, c
   return next({
     ctx: { ...ctx, merchant: { ...ctx.merchant, stripeAccountId } },
   });
+});
+
+export const platformAdminProcedure = protectedProcedure.use(async ({ next, ctx }) => {
+  if (!ctx.user.publicMetadata.isAdmin) {
+    throw new TRPCError({
+      code: "BAD_REQUEST",
+      message: "User is not an admin",
+    });
+  }
+
+  return next();
 });

@@ -12,7 +12,11 @@ export const devRouter = (_args: LoaderFunctionArgs | ActionFunctionArgs) => {
   return new Hono()
     .basePath("/dev")
     .post("/setup", async (c) => {
-      const _users = await clerk.users.getUserList();
+      const users = await clerk.users.getUserList({ limit: 500 });
+
+      for (const u of users.data) {
+        await db.insert(merchants).values({ userId: u.id }).onConflictDoNothing();
+      }
 
       return c.json({});
     })
