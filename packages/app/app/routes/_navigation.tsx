@@ -170,7 +170,6 @@ const Layout = () => {
                   }
                   onSellModalOpenChange();
                 }}
-                isDisabled={true}
                 className={desktopNavLinkStyle}
               >
                 <p>Sell Tickets</p>

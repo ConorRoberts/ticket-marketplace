@@ -1,6 +1,7 @@
 import type { WebhookEvent } from "@clerk/remix/api.server";
 import { json } from "@remix-run/node";
 import { merchants } from "common/schema";
+import { eq } from "drizzle-orm";
 import { Hono } from "hono";
 import { Webhook } from "svix";
 import { db } from "~/utils/db.server";
@@ -51,6 +52,31 @@ export const webhooksRouter = new Hono()
 
     if (event.type === "checkout.session.completed") {
       await handleCheckoutSessionCompleted(event);
+    } else if (event.type === "account.external_account.updated") {
+      // We handle marking a merchant's Stripe account as setup and able to accept payment
+      if (event.data.object.account) {
+        let isChargesEnabled = false;
+        let stripeAccountId: string | null = null;
+
+        if (typeof event.data.object.account === "string") {
+          const acc = await stripe.accounts.retrieve(event.data.object.account);
+
+          isChargesEnabled = acc.charges_enabled;
+          stripeAccountId = acc.id;
+        } else {
+          isChargesEnabled = event.data.object.account.charges_enabled;
+          stripeAccountId = event.data.object.account.id;
+        }
+
+        if (!stripeAccountId) {
+          throw new Error("Could not derive Stripe account ID from event");
+        }
+
+        await db
+          .update(merchants)
+          .set({ isStripeAccountSetup: isChargesEnabled })
+          .where(eq(merchants.stripeAccountId, stripeAccountId));
+      }
     }
 
     return c.json({});

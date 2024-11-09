@@ -23,13 +23,15 @@ jobs:
         name: Install pnpm
         with:
           run_install: |
-            - args: [--filter, partykit]
+            - args: [--filter, partykit, --filter, common]
 
       - name: Install Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20.11.1
           cache: "pnpm"
+
+      - run: pnpm -F common build
 
       - run: pnpm -F partykit partykit:deploy
         env:
