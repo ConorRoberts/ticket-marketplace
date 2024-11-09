@@ -10,8 +10,10 @@ import { logger } from "../logger";
 import { stripe } from "../stripe";
 import { publicProcedure, router, validatedMerchantProcedure } from "./trpcServerConfig";
 import { ticketListingChatMessagesRouter } from "./ticketListingChatMessagesRouter";
+import { ticketListingTransactionsRouter } from "./ticketListingTransactionsRouter";
 
 export const ticketListingsRouter = router({
+  transactions: ticketListingTransactionsRouter,
   chat: ticketListingChatMessagesRouter,
   create: validatedMerchantProcedure
     .input(

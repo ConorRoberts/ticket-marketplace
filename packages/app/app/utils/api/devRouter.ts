@@ -5,7 +5,6 @@ import { Hono } from "hono";
 import { db } from "~/utils/db.server";
 import { checkoutMetadataSchema } from "../checkoutMetadataSchema";
 import { clerk } from "../clerk.server";
-import { createPubSubEvent } from "../createPubSubEvent.server";
 import { handleTicketPurchase } from "./utils/handleTicketPurchase";
 
 export const devRouter = (_args: LoaderFunctionArgs | ActionFunctionArgs) => {
@@ -46,17 +45,5 @@ export const devRouter = (_args: LoaderFunctionArgs | ActionFunctionArgs) => {
       }
 
       return c.json({});
-    })
-    .post("testWs", async (c) => {
-      await createPubSubEvent({
-        room: "",
-        event: {
-          data: {
-            transactionId: "",
-          },
-          type: "ticketPurchase",
-        },
-      });
-      return c.json({ hello: "world" });
     });
 };

@@ -3,6 +3,7 @@ import { ticketListingChatMessages, ticketListingTransactions } from "common/sch
 import { eq } from "drizzle-orm";
 import * as v from "valibot";
 import { db } from "../db.server";
+import { publishPubSubMessage } from "../publishPubSubMessage";
 import { publicProcedure, router } from "./trpcServerConfig";
 
 export const ticketListingChatMessagesRouter = router({
@@ -56,6 +57,8 @@ export const ticketListingChatMessagesRouter = router({
         })
         .returning()
         .get();
+
+      await publishPubSubMessage({ room: transaction.id, event: { type: "chatMessage", data: newMessage } });
 
       return newMessage;
     }),

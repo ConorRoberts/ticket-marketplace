@@ -27,7 +27,9 @@ import {
 import type { LoaderFunctionArgs } from "@remix-run/server-runtime";
 import { ArrowRightIcon } from "lucide-react";
 import type { FC, PropsWithChildren } from "react";
+import { Provider } from "react-redux";
 import { Toaster } from "sonner";
+import { reduxStore } from "~/state/store";
 import { env } from "~/utils/env.server";
 import { TrpcProvider } from "./components/TrpcProvider";
 // import { FLY_DEPLOY_URL } from "./utils/createMetadata";
@@ -83,16 +85,18 @@ const App = () => {
   const navigate = useNavigate();
 
   return (
-    <NextUIProvider navigate={navigate}>
-      <TrpcProvider>
-        <div>
+    <Provider store={reduxStore}>
+      <NextUIProvider navigate={navigate}>
+        <TrpcProvider>
           <div>
-            <Outlet />
+            <div>
+              <Outlet />
+            </div>
+            <Toaster richColors />
           </div>
-          <Toaster richColors />
-        </div>
-      </TrpcProvider>
-    </NextUIProvider>
+        </TrpcProvider>
+      </NextUIProvider>
+    </Provider>
   );
 };
 
@@ -108,7 +112,7 @@ export const ErrorBoundary = () => {
             ? error.message
             : "Unknown Error"}
       </h1>
-      <Link to="/" className="flex items-center gap-2 hover:text-gray-200 transition cursor-pointer px-4 py-1">
+      <Link to="/" className="flex items-center gap-2 hover:text-gray-600 transition cursor-pointer px-4 py-1">
         <p>Go Home</p>
         <ArrowRightIcon className="w-4 h-4" />
       </Link>

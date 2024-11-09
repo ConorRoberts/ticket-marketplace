@@ -5,6 +5,8 @@ import { sharedColumns } from "./shared/columns";
 import { ticketListingTransactions } from "./ticketListingTransactions";
 import { ticketListings } from "./ticketListings";
 
+export type ChatMessage = TicketListingChatMessage & { sender: "buyer" | "seller"; imageUrl: string };
+
 export const ticketListingChatMessages = sqliteTable(
   "ticket_listing_chat_messages",
   {

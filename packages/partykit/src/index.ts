@@ -1,5 +1,5 @@
 import { type ClerkClient, createClerkClient, verifyToken } from "@clerk/backend";
-import { pubSubMessageOutputSchema } from "common/pubsub";
+import { createPubSubMessage, parsePubSubMessage, pubSubMessageOutputSchema } from "common/pubsub";
 import type * as Party from "partykit/server";
 import * as v from "valibot";
 
@@ -37,11 +37,9 @@ export default class Server implements Party.Server {
 
     const token = url.searchParams.get("token");
 
-    if (!token) {
-      return;
+    if (token) {
+      const _verifiedToken = await verifyToken(token, { secretKey: this.env.CLERK_SECRET_KEY });
     }
-
-    const _verifiedToken = await verifyToken(token, { secretKey: this.env.CLERK_SECRET_KEY });
   }
 
   onMessage(message: string, sender: Party.Connection) {
@@ -51,23 +49,25 @@ export default class Server implements Party.Server {
   async onRequest(req: Party.Request): Promise<Response> {
     const token = req.headers.get("Authorization");
 
-    if (!token) {
-      return new Response("Error");
+    if (token) {
+      const _verifiedToken = await verifyToken(token, { secretKey: this.env.CLERK_SECRET_KEY });
     }
 
-    const verifiedToken = await verifyToken(token, { secretKey: this.env.CLERK_SECRET_KEY });
-
-    const json = await req.json();
-    const event = v.safeParse(pubSubMessageOutputSchema, json);
+    const json = await req.text();
+    const parsed = parsePubSubMessage(json);
+    const event = v.safeParse(pubSubMessageOutputSchema, parsed);
 
     if (!event.success) {
-      return new Response("Invalid schema");
+      console.error(event);
+      return new Response("Invalid message");
     }
+
+    const except: string[] = [event.output.publisherId];
 
     const data = event.output;
 
-    if (data.type === "placeholder") {
-      this.room.broadcast(`retard: ${await req.json()}`, [verifiedToken.sub]);
+    if (data.type === "chatMessage") {
+      this.room.broadcast(createPubSubMessage(data), except);
     }
 
     return new Response("Success");
