@@ -29,6 +29,8 @@ export const apiRouter = (args: LoaderFunctionArgs | ActionFunctionArgs) => {
 
       const file = form.get("file");
 
+      console.log(file);
+
       if (!file) {
         return c.var.error("Missing 'file' field");
       }
