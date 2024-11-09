@@ -3,13 +3,13 @@ import { vValidator } from "@hono/valibot-validator";
 import { createId } from "@paralleldrive/cuid2";
 import type { ActionFunctionArgs, LoaderFunctionArgs } from "@remix-run/node";
 import { Hono } from "hono";
+import { logger } from "hono/logger";
 import * as v from "valibot";
 import { type RouterContext, routerContextMiddleware } from "~/utils/api/middleware/routerContextMiddleware";
 import { env } from "~/utils/env.server";
 import { images } from "../images";
 import { devRouter } from "./devRouter";
 import { webhooksRouter } from "./webhooksRouter";
-import { logger } from "hono/logger";
 
 export const apiRouter = (args: LoaderFunctionArgs | ActionFunctionArgs) => {
   const router = new Hono<{ Variables: RouterContext }>()
@@ -20,24 +20,14 @@ export const apiRouter = (args: LoaderFunctionArgs | ActionFunctionArgs) => {
       return c.var.success({ message: "Success" });
     })
 
-    .post("uploadImage", vValidator("form", v.object({ file: v.blob() })), async (c) => {
+    .post("uploadImage", vValidator("form", v.object({ file: v.file() })), async (c) => {
       const { userId } = await getAuth(args);
 
       if (!userId) {
         return c.var.error("Unauthorized", 401);
       }
 
-      const form = await c.req.formData();
-
-      const file = form.get("file");
-
-      if (!file) {
-        return c.var.error("Missing 'file' field");
-      }
-
-      if (!(file instanceof Blob)) {
-        return c.var.error("File is not Blob");
-      }
+      const { file } = c.req.valid("form");
 
       const imageId = createId();
 
