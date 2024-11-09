@@ -1,0 +1,37 @@
+name: Deploy Partykit
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "packages/common/migrations/**"
+      - "packages/common/src/**"
+      - "package.json"
+      - ".github/workflows/deploy-partykit.yaml"
+      - "packages/partykit/src/**"
+      - "packages/partykit/package.json"
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    concurrency: partykit-deploy-group
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        name: Install pnpm
+        with:
+          run_install: |
+            - args: [--filter, partykit]
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.11.1
+          cache: "pnpm"
+
+      - run: pnpm -F partykit partykit:deploy
+        env:
+          PARTYKIT_TOKEN: ${{ secrets.PARTYKIT_TOKEN }}
+          PARTYKIT_LOGIN: ${{ secrets.PARTYKIT_LOGIN  }}
