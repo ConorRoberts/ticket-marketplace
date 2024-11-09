@@ -33,8 +33,8 @@ export const apiRouter = (args: LoaderFunctionArgs | ActionFunctionArgs) => {
         return c.var.error("Missing 'file' field");
       }
 
-      if (!(file instanceof Blob)) {
-        return c.var.error("File is not Blob");
+      if (!(file instanceof File)) {
+        return c.var.error("File is not File");
       }
 
       const imageId = createId();

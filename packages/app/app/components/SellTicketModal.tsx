@@ -138,11 +138,9 @@ export const SellTicketModal: FC<{
                         return;
                       }
 
-                      const blob = new Blob([f], { type: f.type });
-
                       const formData = new FormData();
 
-                      formData.set("file", blob);
+                      formData.set("file", f);
 
                       const uploadResult = await ofetch<UploadImageResponse>(api.uploadImage.$url().toString(), {
                         body: formData,
