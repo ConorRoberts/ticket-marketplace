@@ -25,8 +25,6 @@ const messageTypes = [
       userId: v.nullable(v.string()),
       createdAt: v.date(),
       updatedAt: v.date(),
-      reportedAt: v.nullable(v.date()),
-      completedAt: v.nullable(v.date()),
     }),
   }),
 ] as const;

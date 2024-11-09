@@ -1,11 +1,12 @@
 import { TRPCError } from "@trpc/server";
-import { protectedProcedure, router } from "./trpcServerConfig";
-import * as v from "valibot";
-import { stripe } from "../stripe";
 import { merchants } from "common/schema";
+import { eq } from "drizzle-orm";
+import * as v from "valibot";
+import { clerk } from "../clerk.server";
 import { db } from "../db.server";
 import { env } from "../env.server";
-import { eq } from "drizzle-orm";
+import { stripe } from "../stripe";
+import { protectedProcedure, router } from "./trpcServerConfig";
 
 export const accountsRouter = router({
   createStripeSetupSession: protectedProcedure
@@ -29,12 +30,15 @@ export const accountsRouter = router({
         throw new TRPCError({ code: "BAD_REQUEST", message: "Stripe account is already setup" });
       }
 
+      const email = ctx.user.primaryEmailAddressId
+        ? await clerk.emailAddresses.getEmailAddress(ctx.user.primaryEmailAddressId)
+        : undefined;
       const acc = await stripe.accounts.create({
-        email: ctx.user.primaryEmailAddress?.emailAddress ?? undefined,
+        email: email?.emailAddress ?? undefined,
         type: "express",
         business_profile: {
           url: `${env.server.PUBLIC_WEBSITE_URL}/merchants/${merchant.id}`,
-          name: ctx.user.fullName ?? undefined,
+          name: ctx.user.firstName && ctx.user.lastName ? `${ctx.user.firstName} ${ctx.user.lastName}` : undefined,
         },
         capabilities: {
           card_payments: { requested: true },
