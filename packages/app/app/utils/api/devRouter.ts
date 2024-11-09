@@ -14,7 +14,7 @@ export const devRouter = (_args: LoaderFunctionArgs | ActionFunctionArgs) => {
       const users = await clerk.users.getUserList({ limit: 500 });
 
       for (const u of users.data) {
-        await db.insert(merchants).values({ userId: u.id }).onConflictDoNothing();
+        await db.insert(merchants).values({ userId: u.id, isApproved: true }).onConflictDoNothing();
       }
 
       return c.json({});
