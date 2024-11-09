@@ -13,7 +13,6 @@ import {
   ModalHeader,
 } from "@nextui-org/react";
 import { eventType } from "common/schema";
-import { ofetch } from "ofetch";
 import type { FC } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -21,7 +20,7 @@ import * as v from "valibot";
 import { Image } from "~/components/Image";
 import { Form } from "~/components/ui/form";
 import { FormControl, FormField, FormItem } from "~/components/ui/form";
-import { type UploadImageResponse, useApi } from "~/utils/api/apiClient";
+import { useApi } from "~/utils/api/apiClient";
 import { imageFormats } from "~/utils/imageFormats";
 import { images } from "~/utils/images";
 
@@ -138,14 +137,8 @@ export const SellTicketModal: FC<{
                         return;
                       }
 
-                      const formData = new FormData();
-
-                      formData.set("file", f);
-
-                      const uploadResult = await ofetch<UploadImageResponse>(api.uploadImage.$url().toString(), {
-                        body: formData,
-                        method: "POST",
-                      });
+                      const response = await api.uploadImage.$post({ form: { file: f } });
+                      const uploadResult = await response.json();
 
                       if (!uploadResult.success) {
                         toast.error("Error uploading image");
