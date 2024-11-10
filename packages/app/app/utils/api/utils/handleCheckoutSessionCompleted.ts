@@ -10,5 +10,7 @@ export const handleCheckoutSessionCompleted = async (event: Stripe.CheckoutSessi
     if (data.type === "ticketPurchase") {
       await handleTicketPurchase({ meta: data, checkoutSessionId: event.data.object.id });
     }
+  } else {
+    throw new Error(JSON.stringify(meta.issues));
   }
 };
