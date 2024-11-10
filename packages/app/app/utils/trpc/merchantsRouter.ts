@@ -2,7 +2,8 @@ import { TRPCError } from "@trpc/server";
 import { merchants } from "common/schema";
 import { eq } from "drizzle-orm";
 import { db } from "../db.server";
-import { protectedProcedure, router } from "./trpcServerConfig";
+import { stripe } from "../stripe";
+import { merchantProcedure, protectedProcedure, router } from "./trpcServerConfig";
 
 export const merchantsRouter = router({
   getCurrent: protectedProcedure.query(async ({ ctx }) => {
@@ -15,5 +16,14 @@ export const merchantsRouter = router({
     }
 
     return merchant;
+  }),
+  createStripeConnectLoginLink: merchantProcedure.mutation(async ({ ctx }) => {
+    if (!ctx.merchant.stripeAccountId) {
+      throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Merchant does not have a Stripe account ID" });
+    }
+
+    const loginLink = await stripe.accounts.createLoginLink(ctx.merchant.stripeAccountId);
+
+    return { url: loginLink.url };
   }),
 });

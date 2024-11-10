@@ -3,7 +3,7 @@ import { useUser } from "@clerk/remix";
 import { Navbar, NavbarBrand, NavbarContent, NavbarItem } from "@nextui-org/navbar";
 import { Button, Modal, ModalBody, ModalContent, ModalFooter, ModalHeader, useDisclosure } from "@nextui-org/react";
 import { Link, NavLink, Outlet, useLocation, useNavigate, useRevalidator } from "@remix-run/react";
-import { ArrowRightFromLine, InboxIcon, MenuIcon, TicketIcon } from "lucide-react";
+import { ArrowRightFromLine, CreditCardIcon, InboxIcon, MenuIcon, TicketIcon } from "lucide-react";
 import { type ComponentProps, type FC, useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Drawer } from "vaul";
@@ -100,6 +100,7 @@ const Layout = () => {
   });
   const navigate = useNavigate();
   const sendToast = useSendStripeAccountToast();
+  const { mutateAsync: createLoginLink } = trpc.merchants.createStripeConnectLoginLink.useMutation();
 
   const { revalidate } = useRevalidator();
 
@@ -161,7 +162,6 @@ const Layout = () => {
 
                   if (!merchant.isApproved) {
                     // TODO need to create an "apply" modal
-                    // sendToast("Please connect your bank account before selling tickets.");
                     return;
                   }
                   if (!merchant.isStripeAccountSetup && merchant.isApproved) {
@@ -175,7 +175,25 @@ const Layout = () => {
                 <p>Sell Tickets</p>
                 <TicketIcon className="size-4" />
               </Button>
-              <UserButton showName afterSwitchSessionUrl="/" signInUrl="/login" />
+              <UserButton showName afterSwitchSessionUrl="/" signInUrl="/login">
+                <UserButton.MenuItems>
+                  <UserButton.Action
+                    label="Manage Stripe account"
+                    labelIcon={<CreditCardIcon className="size-3 m-auto" />}
+                    onClick={() => {
+                      // Create login link
+                      toast.promise(createLoginLink, {
+                        loading: "Redirecting",
+                        success: (data) => {
+                          window.location.href = data.url;
+
+                          return "Redirecting";
+                        },
+                      });
+                    }}
+                  />
+                </UserButton.MenuItems>
+              </UserButton>
             </SignedIn>
           </NavbarContent>
         </Navbar>

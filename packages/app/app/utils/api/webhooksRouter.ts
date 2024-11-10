@@ -52,31 +52,16 @@ export const webhooksRouter = new Hono()
 
     if (event.type === "checkout.session.completed") {
       await handleCheckoutSessionCompleted(event);
-    } else if (event.type === "account.external_account.updated") {
+    } else if (event.type === "account.updated") {
       // We handle marking a merchant's Stripe account as setup and able to accept payment
-      if (event.data.object.account) {
-        let isChargesEnabled = false;
-        let stripeAccountId: string | null = null;
 
-        if (typeof event.data.object.account === "string") {
-          const acc = await stripe.accounts.retrieve(event.data.object.account);
+      const isChargesEnabled = event.data.object.charges_enabled;
+      const stripeAccountId = event.data.object.id;
 
-          isChargesEnabled = acc.charges_enabled;
-          stripeAccountId = acc.id;
-        } else {
-          isChargesEnabled = event.data.object.account.charges_enabled;
-          stripeAccountId = event.data.object.account.id;
-        }
-
-        if (!stripeAccountId) {
-          throw new Error("Could not derive Stripe account ID from event");
-        }
-
-        await db
-          .update(merchants)
-          .set({ isStripeAccountSetup: isChargesEnabled })
-          .where(eq(merchants.stripeAccountId, stripeAccountId));
-      }
+      await db
+        .update(merchants)
+        .set({ isStripeAccountSetup: isChargesEnabled })
+        .where(eq(merchants.stripeAccountId, stripeAccountId));
     }
 
     return c.json({});
