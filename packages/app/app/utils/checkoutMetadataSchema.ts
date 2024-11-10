@@ -15,7 +15,7 @@ export const createCheckoutMetadata = (data: CheckoutMetadata) => {
 };
 
 export const parseCheckoutMetadata = (data: Stripe.Metadata | null) => {
-  return v.safeParse(
+  return v.parse(
     v.pipe(
       v.object({ data: v.string() }),
       v.transform((value) => JSON.parse(value.data)),

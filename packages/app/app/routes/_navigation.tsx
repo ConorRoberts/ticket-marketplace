@@ -208,7 +208,7 @@ const Layout = () => {
 
 const NotificationsModal: FC<{ open: boolean; onOpenChange: (state: boolean) => void }> = (props) => {
   const { isSignedIn = false } = useUser();
-  const { data: _notifications } = trpc.notifications.getAll.useQuery(undefined, { enabled: isSignedIn });
+  const { data: notifications } = trpc.notifications.getAll.useQuery(undefined, { enabled: isSignedIn });
 
   return (
     <Modal size="xl" isOpen={props.open} onOpenChange={props.onOpenChange}>
@@ -216,7 +216,23 @@ const NotificationsModal: FC<{ open: boolean; onOpenChange: (state: boolean) => 
         {(onClose) => (
           <>
             <ModalHeader className="flex flex-col gap-1">Notifications</ModalHeader>
-            <ModalBody>Notifications</ModalBody>
+            <ModalBody>
+              <div className="flex flex-col divide-y">
+                {notifications?.map((e) => {
+                  const content = <p>{e.message}</p>;
+
+                  if (e.url) {
+                    return (
+                      <Link to={e.url} key={e.id}>
+                        {content}
+                      </Link>
+                    );
+                  }
+
+                  return <div key={e.id}>{content}</div>;
+                })}
+              </div>
+            </ModalBody>
             <ModalFooter>
               <Button variant="light" onPress={onClose}>
                 Close
