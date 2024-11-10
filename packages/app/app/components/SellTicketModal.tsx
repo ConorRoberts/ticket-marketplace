@@ -145,7 +145,10 @@ export const SellTicketModal: FC<{
                         return;
                       }
 
-                      form.setValue("event.imageId", uploadResult.data.imageId, { shouldTouch: true });
+                      form.setValue("event.imageId", uploadResult.data.imageId, {
+                        shouldTouch: true,
+                        shouldDirty: true,
+                      });
                     }}
                   />
 

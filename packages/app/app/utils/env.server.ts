@@ -17,6 +17,7 @@ export const env = createEnv({
     STRIPE_PUBLIC_KEY: v.string(),
     STRIPE_SECRET_KEY: v.string(),
     STRIPE_SIGNING_SECRET: v.string(),
+    STRIPE_CONNECT_SIGNING_SECRET: v.string(),
 
     PUBLIC_MAPBOX_TOKEN: v.string(),
     MAPBOX_PRIVATE_TOKEN: v.string(),

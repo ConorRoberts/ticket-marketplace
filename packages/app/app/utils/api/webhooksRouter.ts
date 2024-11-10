@@ -50,6 +50,22 @@ export const webhooksRouter = new Hono()
       return json({ message: "Event ignored" }, { status: 200 });
     }
 
+    return c.json({});
+  })
+  .all("/stripe/connect", async (c) => {
+    const body = await c.req.text();
+    const sig = c.req.header("stripe-signature");
+
+    if (!sig) {
+      throw new Error(`Missing header "stripe-signature"`);
+    }
+
+    const event = stripe.webhooks.constructEvent(body, sig, env.server.STRIPE_CONNECT_SIGNING_SECRET);
+
+    if (!event.livemode || env.server.NODE_ENV === "development") {
+      return json({ message: "Event ignored" }, { status: 200 });
+    }
+
     if (event.type === "checkout.session.completed") {
       await handleCheckoutSessionCompleted(event);
     } else if (event.type === "account.updated") {
