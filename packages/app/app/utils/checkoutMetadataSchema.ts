@@ -1,3 +1,4 @@
+import type Stripe from "stripe";
 import * as v from "valibot";
 
 export const checkoutMetadataSchema = v.variant("type", [
@@ -13,11 +14,11 @@ export const createCheckoutMetadata = (data: CheckoutMetadata) => {
   return { data: JSON.stringify(data) };
 };
 
-export const parseCheckoutMetadata = (data: any) => {
+export const parseCheckoutMetadata = (data: Stripe.Metadata) => {
   return v.safeParse(
     v.pipe(
-      v.any(),
-      v.transform((value) => JSON.parse(value)),
+      v.object({ data: v.string() }),
+      v.transform((value) => JSON.parse(value.data)),
       checkoutMetadataSchema,
     ),
     data,
