@@ -9,6 +9,7 @@ import {
   DropdownTrigger,
   Input,
   Modal,
+  ModalBody,
   ModalContent,
   ModalFooter,
   ModalHeader,
@@ -17,6 +18,7 @@ import {
 import type { MetaFunction } from "@remix-run/node";
 import { useLoaderData, useNavigate, useRevalidator } from "@remix-run/react";
 import { type LoaderFunctionArgs, redirect } from "@remix-run/server-runtime";
+import { useMutation } from "@tanstack/react-query";
 import { ticketListings } from "common/schema";
 import { eq } from "drizzle-orm";
 import { PencilIcon, SettingsIcon, TicketIcon, TrashIcon } from "lucide-react";
@@ -100,13 +102,27 @@ const Route = () => {
 
   const { isOpen: isDeleteOpen, onOpenChange: onDeleteOpenChange } = useDisclosure();
   const { isOpen: isEditOpen, onOpenChange: onEditOpenChange } = useDisclosure();
+  const { isOpen: isEmailDialogOpen, onOpenChange: onEmailDialogOpenChange } = useDisclosure();
   const { mutateAsync: updateListing } = trpc.listings.update.useMutation();
   const { revalidate } = useRevalidator();
   const { user } = useUser();
   const isAdmin = user?.id === loaderData.listing.merchant.userId;
 
+  const handlePurchaseContinue = async (email: string) => {
+    await createPurchaseSession({ listingId: loaderData.listing.id, redirectUrl: window.location.href, email });
+  };
+
   return (
     <Page classNames={{ container: "relative" }}>
+      <Modal isOpen={isEmailDialogOpen} onOpenChange={onEmailDialogOpenChange}>
+        <ModalContent>
+          <ModalHeader>Provide your email</ModalHeader>
+
+          <ModalBody className="mb-2">
+            <EmailForm onSubmit={handlePurchaseContinue} />
+          </ModalBody>
+        </ModalContent>
+      </Modal>
       <Modal isOpen={isDeleteOpen} onOpenChange={onDeleteOpenChange}>
         <ModalContent>
           {(onClose) => (
@@ -254,9 +270,11 @@ const Route = () => {
             onClick={() => {
               const email = user?.primaryEmailAddress?.emailAddress;
               if (!email) {
+                onEmailDialogOpenChange();
                 return;
               }
-              createPurchaseSession({ listingId: loaderData.listing.id, redirectUrl: window.location.href, email });
+
+              handlePurchaseContinue(email);
             }}
             startContent={<TicketIcon className="size-4" />}
           >
@@ -265,6 +283,38 @@ const Route = () => {
         </div>
       </div>
     </Page>
+  );
+};
+
+const EmailForm: FC<{ onSubmit: (email: string) => void | Promise<void> }> = (props) => {
+  const { mutateAsync: submit, isPending } = useMutation({
+    mutationFn: async (email: string) => {
+      await props.onSubmit(email);
+    },
+  });
+
+  return (
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+
+        const formData = new FormData(e.currentTarget);
+
+        const email = formData.get("email")?.toString();
+
+        if (!email) {
+          return;
+        }
+
+        submit(email);
+      }}
+      className="flex flex-col gap-4"
+    >
+      <Input type="email" name="email" autoFocus label="Email" />
+      <Button type="submit" color="primary" className="mx-auto" isLoading={isPending}>
+        Submit
+      </Button>
+    </form>
   );
 };
 
