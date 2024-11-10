@@ -19,7 +19,6 @@ export const apiRouter = (args: LoaderFunctionArgs | ActionFunctionArgs) => {
     .get("/health", (c) => {
       return c.var.success({ message: "Success" });
     })
-
     .post("uploadImage", vValidator("form", v.object({ file: v.any() })), async (c) => {
       const { userId } = await getAuth(args);
 
@@ -41,7 +40,12 @@ export const apiRouter = (args: LoaderFunctionArgs | ActionFunctionArgs) => {
 
       return c.var.success({ imageId });
     })
-    .route("/", webhooksRouter);
+    .route("/", webhooksRouter)
+    .onError((e, c) => {
+      console.error(e);
+
+      return c.json({ message: e.message }, 500);
+    });
 
   if (env.server.NODE_ENV === "development") {
     router.route("/", devRouter(args));
