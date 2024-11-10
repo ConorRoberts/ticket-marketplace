@@ -47,7 +47,7 @@ const db = drizzle(
     consola.success("Reset database");
   }
 
-  await runLoaders({ db, mode: "before" });
+  await runLoaders({ db, timing: "before" });
 
   consola.info("Running migrations");
   await migrate(db, {
@@ -56,7 +56,7 @@ const db = drizzle(
   });
   consola.success("Migrations applied");
 
-  await runLoaders({ db, mode: "after" });
+  await runLoaders({ db, timing: "after" });
 
   process.exit(0);
 })();

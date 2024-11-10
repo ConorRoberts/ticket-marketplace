@@ -10,6 +10,8 @@ export default class Server implements Party.Server {
   private clerk: ClerkClient;
 
   constructor(readonly room: Party.Room) {
+    console.log(room.env);
+
     const parsedEnv = v.safeParse(envSchema, room.env);
 
     if (!parsedEnv.success) {
@@ -20,7 +22,7 @@ export default class Server implements Party.Server {
       throw new Error("Invalid environment variables");
     }
 
-    this.env = v.parse(envSchema, room.env);
+    this.env = parsedEnv.output;
 
     this.clerk = createClerkClient({
       secretKey: this.env.CLERK_SECRET_KEY,
