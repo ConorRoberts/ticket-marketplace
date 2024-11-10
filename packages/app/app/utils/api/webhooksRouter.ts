@@ -1,5 +1,4 @@
 import type { WebhookEvent } from "@clerk/remix/api.server";
-import { json } from "@remix-run/node";
 import { merchants } from "common/schema";
 import { eq } from "drizzle-orm";
 import { Hono } from "hono";
@@ -44,11 +43,7 @@ export const webhooksRouter = new Hono()
       throw new Error(`Missing header "stripe-signature"`);
     }
 
-    const event = stripe.webhooks.constructEvent(body, sig, env.server.STRIPE_SIGNING_SECRET);
-
-    if (!event.livemode || env.server.NODE_ENV === "development") {
-      return json({ message: "Event ignored" }, { status: 200 });
-    }
+    const _event = stripe.webhooks.constructEvent(body, sig, env.server.STRIPE_SIGNING_SECRET);
 
     return c.json({});
   })
@@ -61,10 +56,6 @@ export const webhooksRouter = new Hono()
     }
 
     const event = stripe.webhooks.constructEvent(body, sig, env.server.STRIPE_CONNECT_SIGNING_SECRET);
-
-    if (!event.livemode || env.server.NODE_ENV === "development") {
-      return json({ message: "Event ignored" }, { status: 200 });
-    }
 
     if (event.type === "checkout.session.completed") {
       await handleCheckoutSessionCompleted(event);
