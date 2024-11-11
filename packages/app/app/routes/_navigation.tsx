@@ -1,14 +1,15 @@
 import { SignedIn, SignedOut, UserButton } from "@clerk/remix";
 import { useUser } from "@clerk/remix";
 import { Navbar, NavbarBrand, NavbarContent, NavbarItem } from "@nextui-org/navbar";
-import { Button, Modal, ModalBody, ModalContent, ModalFooter, ModalHeader, useDisclosure } from "@nextui-org/react";
+import { Button, useDisclosure } from "@nextui-org/react";
 import { Link, NavLink, Outlet, useLocation, useNavigate, useRevalidator } from "@remix-run/react";
-import { ArrowRightFromLine, CreditCardIcon, InboxIcon, MenuIcon, TicketIcon } from "lucide-react";
+import { CreditCardIcon, InboxIcon, LogInIcon, MenuIcon, TicketIcon } from "lucide-react";
 import { type ComponentProps, type FC, useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Drawer } from "vaul";
 import { Footer } from "~/components/Footer";
 import { Logo } from "~/components/Logo";
+import { NotificationsModal } from "~/components/NotificationsModal";
 import { SellTicketModal } from "~/components/SellTicketModal";
 import { cn } from "~/utils/cn";
 import { trpc } from "~/utils/trpc/trpcClient";
@@ -87,6 +88,32 @@ const MobileNavLink: FC<ComponentProps<typeof NavLink>> = ({ children, className
   );
 };
 
+const CustomUserButton: FC<ComponentProps<typeof UserButton>> = (props) => {
+  const { mutateAsync: createLoginLink } = trpc.merchants.createStripeConnectLoginLink.useMutation();
+
+  return (
+    <UserButton afterSwitchSessionUrl="/" signInUrl="/login" {...props}>
+      <UserButton.MenuItems>
+        <UserButton.Action
+          label="Manage Stripe account"
+          labelIcon={<CreditCardIcon className="size-3 m-auto" />}
+          onClick={() => {
+            // Create login link
+            toast.promise(createLoginLink, {
+              loading: "Redirecting",
+              success: (data) => {
+                window.location.href = data.url;
+
+                return "Redirecting";
+              },
+            });
+          }}
+        />
+      </UserButton.MenuItems>
+    </UserButton>
+  );
+};
+
 const Layout = () => {
   useStripeAccountChecker();
   const location = useLocation();
@@ -98,9 +125,9 @@ const Layout = () => {
     gcTime: Infinity,
     enabled: isSignedIn,
   });
+  const { data: notifications } = trpc.notifications.getAll.useQuery(undefined, { enabled: isSignedIn });
   const navigate = useNavigate();
   const sendToast = useSendStripeAccountToast();
-  const { mutateAsync: createLoginLink } = trpc.merchants.createStripeConnectLoginLink.useMutation();
 
   const { revalidate } = useRevalidator();
 
@@ -123,7 +150,20 @@ const Layout = () => {
       />
       <NotificationsModal open={isNotificationsModalOpen} onOpenChange={onNotificationsModalOpenChange} />
       <div className="flex min-h-screen flex-col relative">
-        <div className="flex items-center justify-end isolate z-50 fixed bottom-0 inset-x-0 p-2 lg:hidden">
+        <div className="flex items-center justify-end isolate z-50 fixed bottom-0 inset-x-0 h-16 lg:hidden rounded-tl-3xl bg-white border ml-auto w-max">
+          {isSignedIn ? (
+            <CustomUserButton
+              appearance={{
+                elements: { userButtonAvatarBox: "size-8", rootBox: "h-12 w-16 flex justify-center pt-2 items-start" },
+              }}
+            />
+          ) : (
+            <Link className="flex h-12 w-16 items-start justify-center pt-2" to="/login">
+              <div className="relative">
+                <LogInIcon className="size-8" />
+              </div>
+            </Link>
+          )}
           <MobileNavigation key={location.pathname} />
         </div>
         <Navbar className="w-full max-w-5xl mx-auto hidden lg:block bg-transparent" position="static">
@@ -145,12 +185,21 @@ const Layout = () => {
               </button>
               <DesktopNavLink to="/login">
                 <p>Login</p>
-                <ArrowRightFromLine className="size-4" />
+                <LogInIcon className="size-4" />
               </DesktopNavLink>
             </SignedOut>
             <SignedIn>
-              <button type="button" className={desktopNavLinkStyle} onClick={() => onNotificationsModalOpenChange()}>
-                <InboxIcon className="size-4" />
+              <button
+                type="button"
+                className={cn(desktopNavLinkStyle)}
+                onClick={() => onNotificationsModalOpenChange()}
+              >
+                <div className="relative size-4">
+                  {notifications && notifications.length > 0 && (
+                    <div className="size-1.5 absolute bg-blue-400 rounded-full top-0 right-0 translate-x-1/2 -translate-y-1/2 animate-pulse" />
+                  )}
+                  <InboxIcon className="size-4" />
+                </div>
               </button>
               <Button
                 type="button"
@@ -175,25 +224,7 @@ const Layout = () => {
                 <p>Sell Tickets</p>
                 <TicketIcon className="size-4" />
               </Button>
-              <UserButton showName afterSwitchSessionUrl="/" signInUrl="/login">
-                <UserButton.MenuItems>
-                  <UserButton.Action
-                    label="Manage Stripe account"
-                    labelIcon={<CreditCardIcon className="size-3 m-auto" />}
-                    onClick={() => {
-                      // Create login link
-                      toast.promise(createLoginLink, {
-                        loading: "Redirecting",
-                        success: (data) => {
-                          window.location.href = data.url;
-
-                          return "Redirecting";
-                        },
-                      });
-                    }}
-                  />
-                </UserButton.MenuItems>
-              </UserButton>
+              <CustomUserButton showName />
             </SignedIn>
           </NavbarContent>
         </Navbar>
@@ -203,45 +234,6 @@ const Layout = () => {
       </div>
       <Footer />
     </>
-  );
-};
-
-const NotificationsModal: FC<{ open: boolean; onOpenChange: (state: boolean) => void }> = (props) => {
-  const { isSignedIn = false } = useUser();
-  const { data: notifications } = trpc.notifications.getAll.useQuery(undefined, { enabled: isSignedIn });
-
-  return (
-    <Modal size="xl" isOpen={props.open} onOpenChange={props.onOpenChange}>
-      <ModalContent>
-        {(onClose) => (
-          <>
-            <ModalHeader className="flex flex-col gap-1">Notifications</ModalHeader>
-            <ModalBody>
-              <div className="flex flex-col divide-y">
-                {notifications?.map((e) => {
-                  const content = <p>{e.message}</p>;
-
-                  if (e.url) {
-                    return (
-                      <Link to={e.url} key={e.id}>
-                        {content}
-                      </Link>
-                    );
-                  }
-
-                  return <div key={e.id}>{content}</div>;
-                })}
-              </div>
-            </ModalBody>
-            <ModalFooter>
-              <Button variant="light" onPress={onClose}>
-                Close
-              </Button>
-            </ModalFooter>
-          </>
-        )}
-      </ModalContent>
-    </Modal>
   );
 };
 

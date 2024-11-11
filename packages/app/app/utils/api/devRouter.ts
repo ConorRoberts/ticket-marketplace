@@ -1,6 +1,6 @@
 import { vValidator } from "@hono/valibot-validator";
 import type { ActionFunctionArgs, LoaderFunctionArgs } from "@remix-run/node";
-import { merchants } from "common/schema";
+import { merchants, notifications } from "common/schema";
 import { Hono } from "hono";
 import { db } from "~/utils/db.server";
 import { checkoutMetadataSchema } from "../checkoutMetadataSchema";
@@ -42,6 +42,15 @@ export const devRouter = (_args: LoaderFunctionArgs | ActionFunctionArgs) => {
 
       if (data.type === "ticketPurchase") {
         await handleTicketPurchase({ meta: data, checkoutSessionId: null });
+      }
+
+      return c.json({});
+    })
+    .post("sendNotifications", async (c) => {
+      const users = await clerk.users.getUserList({ limit: 500 });
+
+      for (const u of users.data) {
+        await db.insert(notifications).values({ message: "test", userId: u.id });
       }
 
       return c.json({});

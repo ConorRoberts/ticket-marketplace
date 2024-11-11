@@ -9,6 +9,7 @@ export const notifications = sqliteTable(
     ...sharedColumns.common,
     userId: text("user_id").notNull(),
     message: text("message").notNull(),
+    name: text("name").notNull().default("Notification"),
     url: text("url"),
     isDismissed: int("is_dismissed", { mode: "boolean" }).default(false).notNull(),
   },

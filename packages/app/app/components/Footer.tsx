@@ -13,7 +13,7 @@ const FooterLink: FC<ComponentProps<typeof Link>> = ({ className, children, ...p
 
 export const Footer = () => {
   return (
-    <div className="border-t border-gray-200 bg-gray-100 px-2 py-8 flex flex-col gap-4">
+    <div className="border-t border-gray-200 bg-gray-100 px-2 py-8 flex flex-col gap-4 pb-20 lg:pb-8">
       <div className="flex">
         <div className="flex w-full flex-col gap-8 max-w-5xl mx-auto">
           <div className="flex flex-col md:flex-row gap-8 md:gap-32">

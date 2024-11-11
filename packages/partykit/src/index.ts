@@ -7,11 +7,9 @@ const envSchema = v.object({ CLERK_SECRET_KEY: v.string(), CLERK_PUBLISHABLE_KEY
 
 export default class Server implements Party.Server {
   private env: v.InferOutput<typeof envSchema>;
-  private clerk: ClerkClient;
+  private _clerk: ClerkClient;
 
   constructor(readonly room: Party.Room) {
-    console.log(room.env);
-
     const parsedEnv = v.safeParse(envSchema, room.env);
 
     if (!parsedEnv.success) {
@@ -24,7 +22,7 @@ export default class Server implements Party.Server {
 
     this.env = parsedEnv.output;
 
-    this.clerk = createClerkClient({
+    this._clerk = createClerkClient({
       secretKey: this.env.CLERK_SECRET_KEY,
       publishableKey: this.env.CLERK_PUBLISHABLE_KEY,
     });
