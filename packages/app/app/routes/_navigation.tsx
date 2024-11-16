@@ -183,13 +183,13 @@ const Layout = () => {
           {isSignedIn ? (
             <CustomUserButton
               appearance={{
-                elements: { userButtonAvatarBox: "size-8", rootBox: "h-12 w-16 flex justify-center pt-2 items-start" },
+                elements: { userButtonAvatarBox: "size-6", rootBox: "h-10 w-16 flex justify-center pt-2 items-start" },
               }}
             />
           ) : (
-            <Link className="flex h-12 w-16 items-start justify-center pt-2" to="/login">
+            <Link className="flex h-10 w-16 items-start justify-center pt-2" to="/login">
               <div className="relative">
-                <LogInIcon className="size-8" />
+                <LogInIcon className="size-6" />
               </div>
             </Link>
           )}
@@ -278,9 +278,9 @@ const MobileNavigation = () => {
 
   return (
     <Drawer.Root open={open} onOpenChange={setOpen}>
-      <Drawer.Trigger className="flex h-12 w-16 items-start justify-center pt-2">
+      <Drawer.Trigger className="flex h-10 w-16 items-start justify-center pt-2">
         <div className="relative">
-          <MenuIcon className="h-8 w-8" />
+          <MenuIcon className="size-6" />
         </div>
       </Drawer.Trigger>
       <Drawer.Portal>
