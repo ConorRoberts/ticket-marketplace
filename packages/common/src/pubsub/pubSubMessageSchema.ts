@@ -16,6 +16,10 @@ const defineMessage = <Name extends string, Data extends v.GenericSchema>(args: 
 const messageTypes = [
   defineMessage({ name: "ticketPurchase", data: v.object({ transactionId: v.string() }) }),
   defineMessage({
+    name: "applicationUpdate",
+    data: v.object({ status: v.picklist(["approved", "rejected"]), message: v.string() }),
+  }),
+  defineMessage({
     name: "chatMessage",
     data: v.object({
       id: v.string(),

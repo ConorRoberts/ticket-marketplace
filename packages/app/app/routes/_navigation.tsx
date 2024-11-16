@@ -3,14 +3,16 @@ import { useUser } from "@clerk/remix";
 import { Navbar, NavbarBrand, NavbarContent, NavbarItem } from "@nextui-org/navbar";
 import { Button, useDisclosure } from "@nextui-org/react";
 import { Link, NavLink, Outlet, useLocation, useNavigate, useRevalidator } from "@remix-run/react";
-import { CreditCardIcon, InboxIcon, LogInIcon, MenuIcon, TicketIcon } from "lucide-react";
+import { CreditCardIcon, InboxIcon, LogInIcon, MenuIcon, ShieldIcon, TicketIcon } from "lucide-react";
 import { type ComponentProps, type FC, useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Drawer } from "vaul";
 import { Footer } from "~/components/Footer";
 import { Logo } from "~/components/Logo";
+import { MerchantApplyModal } from "~/components/MerchantApplyModal";
 import { NotificationsModal } from "~/components/NotificationsModal";
 import { SellTicketModal } from "~/components/SellTicketModal";
+import { useUserMetadata } from "~/utils/api/utils/useUserMetadata";
 import { cn } from "~/utils/cn";
 import { trpc } from "~/utils/trpc/trpcClient";
 
@@ -90,6 +92,8 @@ const MobileNavLink: FC<ComponentProps<typeof NavLink>> = ({ children, className
 
 const CustomUserButton: FC<ComponentProps<typeof UserButton>> = (props) => {
   const { mutateAsync: createLoginLink } = trpc.merchants.createStripeConnectLoginLink.useMutation();
+  const meta = useUserMetadata();
+  const navigate = useNavigate();
 
   return (
     <UserButton afterSwitchSessionUrl="/" signInUrl="/login" {...props}>
@@ -109,6 +113,15 @@ const CustomUserButton: FC<ComponentProps<typeof UserButton>> = (props) => {
             });
           }}
         />
+        {meta?.public.isAdmin && (
+          <UserButton.Action
+            label="Admin page"
+            labelIcon={<ShieldIcon className="size-3 m-auto" />}
+            onClick={() => {
+              navigate("/admin");
+            }}
+          />
+        )}
       </UserButton.MenuItems>
     </UserButton>
   );
@@ -120,14 +133,16 @@ const Layout = () => {
   const { isSignedIn = false } = useUser();
   const { isOpen: isSellModalOpen, onOpenChange: onSellModalOpenChange } = useDisclosure();
   const { isOpen: isNotificationsModalOpen, onOpenChange: onNotificationsModalOpenChange } = useDisclosure();
-  const { data: merchant } = trpc.merchants.getCurrent.useQuery(undefined, {
+  const { data: merchant, refetch: refetchMerchant } = trpc.merchants.getCurrent.useQuery(undefined, {
     staleTime: Infinity,
     gcTime: Infinity,
     enabled: isSignedIn,
+    retry: false,
   });
   const { data: notifications } = trpc.notifications.getAll.useQuery(undefined, { enabled: isSignedIn });
   const navigate = useNavigate();
   const sendToast = useSendStripeAccountToast();
+  const { isOpen: isMerchantApplyOpen, onOpenChange: toggleMerchantApplyOpen } = useDisclosure();
 
   const { revalidate } = useRevalidator();
 
@@ -135,6 +150,12 @@ const Layout = () => {
     onSuccess: (data) => {
       revalidate();
       navigate(`/listing/${data.id}`);
+    },
+  });
+
+  const { mutateAsync: createApplication } = trpc.merchants.createApplication.useMutation({
+    onSuccess: () => {
+      refetchMerchant();
     },
   });
 
@@ -147,6 +168,14 @@ const Layout = () => {
         open={isSellModalOpen}
         onOpenChange={onSellModalOpenChange}
         key={isSellModalOpen ? "true" : "false"}
+      />
+      <MerchantApplyModal
+        isOpen={isMerchantApplyOpen}
+        onOpenChange={toggleMerchantApplyOpen}
+        onSubmit={async (data) => {
+          await createApplication(data);
+          toggleMerchantApplyOpen();
+        }}
       />
       <NotificationsModal open={isNotificationsModalOpen} onOpenChange={onNotificationsModalOpenChange} />
       <div className="flex min-h-screen flex-col relative">
@@ -209,10 +238,17 @@ const Layout = () => {
                     return;
                   }
 
-                  if (!merchant.isApproved) {
-                    // TODO need to create an "apply" modal
+                  if (merchant.isApplicationPending) {
+                    toast.info("Your application is currently under review.");
                     return;
                   }
+
+                  if (!merchant.isApproved) {
+                    // TODO need to create an "apply" modal
+                    toggleMerchantApplyOpen();
+                    return;
+                  }
+
                   if (!merchant.isStripeAccountSetup && merchant.isApproved) {
                     sendToast("Please connect your bank account before selling tickets.");
                     return;

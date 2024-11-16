@@ -1,6 +1,7 @@
 import type { InferInsertModel, InferSelectModel } from "drizzle-orm";
 import { relations } from "drizzle-orm";
 import { int, sqliteTable, text } from "drizzle-orm/sqlite-core";
+import { merchantApplications } from "./merchantApplications";
 import { sharedColumns } from "./shared/columns";
 import { ticketListings } from "./ticketListings";
 
@@ -19,7 +20,10 @@ export const merchants = sqliteTable(
   (_table) => ({}),
 );
 
-export const merchantRelations = relations(merchants, (r) => ({ ticketListings: r.many(ticketListings) }));
+export const merchantRelations = relations(merchants, (r) => ({
+  ticketListings: r.many(ticketListings),
+  applications: r.many(merchantApplications),
+}));
 
 export type Merchant = InferSelectModel<typeof merchants>;
 export type NewMerchant = InferInsertModel<typeof merchants>;

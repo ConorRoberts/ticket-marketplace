@@ -2,6 +2,7 @@ import type { InferInsertModel, InferSelectModel } from "drizzle-orm";
 import { relations } from "drizzle-orm";
 import { sqliteTable, text } from "drizzle-orm/sqlite-core";
 import { sharedColumns } from "./shared/columns";
+import { ticketListingChatMessageOpens } from "./ticketListingChatMessageOpens";
 import { ticketListingTransactions } from "./ticketListingTransactions";
 import { ticketListings } from "./ticketListings";
 
@@ -30,6 +31,7 @@ export const ticketListingChatMessageRelations = relations(ticketListingChatMess
     fields: [ticketListingChatMessages.transactionId],
     references: [ticketListingTransactions.id],
   }),
+  opens: r.many(ticketListingChatMessageOpens),
 }));
 
 export type TicketListingChatMessage = InferSelectModel<typeof ticketListingChatMessages>;

@@ -6,3 +6,5 @@ export * from "./schema/ticketListings";
 export * from "./schema/ticketListingTransactions";
 export * from "./schema/notifications";
 export * from "./schema/ticketListingChatMessages";
+export * from "./schema/ticketListingChatMessageOpens";
+export * from "./schema/merchantApplications";
