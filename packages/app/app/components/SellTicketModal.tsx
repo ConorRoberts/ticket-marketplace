@@ -137,17 +137,25 @@ export const SellTicketModal: FC<{
                         return;
                       }
 
-                      const response = await api.uploadImage.$post({ form: { file: f } });
-                      const uploadResult = await response.json();
+                      const upload = async () => {
+                        const response = await api.uploadImage.$post({ form: { file: f } });
+                        const uploadResult = await response.json();
 
-                      if (!uploadResult.success) {
-                        toast.error("Error uploading image");
-                        return;
-                      }
+                        if (!uploadResult.success) {
+                          throw new Error();
+                        }
 
-                      form.setValue("event.imageId", uploadResult.data.imageId, {
-                        shouldTouch: true,
-                        shouldDirty: true,
+                        form.setValue("event.imageId", uploadResult.data.imageId, {
+                          shouldTouch: true,
+                          shouldDirty: true,
+                          shouldValidate: true,
+                        });
+                      };
+
+                      toast.promise(upload(), {
+                        loading: "Uploading image",
+                        error: "Error uploading image",
+                        success: "Image uploaded",
                       });
                     }}
                   />
