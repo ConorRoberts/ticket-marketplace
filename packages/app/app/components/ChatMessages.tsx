@@ -21,7 +21,7 @@ export const ChatMessages: FC<{
   sender: ChatMessage["sender"];
 }> = (props) => {
   const scroll = useScroll(props.containerRef ? { container: props.containerRef } : undefined);
-  const [side, setSide] = useState<"top" | "bottom" | "none">("none");
+  const [side, setSide] = useState<"top" | "bottom" | "none" | null>(null);
 
   useEffect(() => {
     return scroll.scrollYProgress.on("change", (value) => {

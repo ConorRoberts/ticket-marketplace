@@ -1,13 +1,25 @@
-import { Button, Modal, ModalBody, ModalContent, ModalFooter, ModalHeader } from "@nextui-org/react";
+import { getAuth } from "@clerk/remix/ssr.server";
+import { Button, Modal, ModalBody, ModalContent, ModalFooter, ModalHeader, Tab, Tabs } from "@nextui-org/react";
 import { Table, TableBody, TableCell, TableColumn, TableHeader, TableRow, getKeyValue } from "@nextui-org/table";
 import type { LoaderFunctionArgs, MetaFunction } from "@remix-run/node";
-import { useLoaderData, useRevalidator } from "@remix-run/react";
+import { redirect, useLoaderData, useRevalidator } from "@remix-run/react";
 import { useMutation } from "@tanstack/react-query";
-import { type Merchant, type MerchantApplication, merchantApplications, merchants } from "common/schema";
-import { and, eq, inArray } from "drizzle-orm";
+import {
+  type Event,
+  type Merchant,
+  type MerchantApplication,
+  type TicketListing,
+  type TicketListingChatMessage,
+  type TicketListingTransaction,
+  merchantApplications,
+  merchants,
+  ticketListingTransactions,
+} from "common/schema";
+import { and, eq, inArray, isNotNull } from "drizzle-orm";
 import { type FC, useState } from "react";
 import { ClientDate } from "~/components/ClientDate";
 import { Page } from "~/components/Page";
+import { isAdmin } from "~/utils/api/utils/isAdmin";
 import { clerk } from "~/utils/clerk.server";
 import { cn } from "~/utils/cn";
 import { createMetadata } from "~/utils/createMetadata";
@@ -18,7 +30,15 @@ export const meta: MetaFunction = () => {
   return createMetadata({ title: "Admin" });
 };
 
-export const loader = async (_args: LoaderFunctionArgs) => {
+export const loader = async (args: LoaderFunctionArgs) => {
+  const auth = await getAuth(args);
+
+  const admin = await isAdmin(auth);
+
+  if (!admin) {
+    throw redirect("/");
+  }
+
   const pendingApplications = await db.query.merchantApplications.findMany({
     where: and(
       eq(merchantApplications.status, "pending"),
@@ -29,6 +49,18 @@ export const loader = async (_args: LoaderFunctionArgs) => {
     ),
     with: {
       merchant: true,
+    },
+  });
+
+  const _reportedTransactions = await db.query.ticketListingTransactions.findMany({
+    where: isNotNull(ticketListingTransactions.reportedAt),
+    with: {
+      messages: true,
+      ticketListing: {
+        with: {
+          event: true,
+        },
+      },
     },
   });
 
@@ -58,6 +90,13 @@ export const loader = async (_args: LoaderFunctionArgs) => {
   return { applications: applicationsWithUsers };
 };
 
+type ReportsTableData = TicketListingTransaction & {
+  ticketListing: TicketListing & { event: Event };
+  messages: TicketListingChatMessage[];
+};
+
+type TabOption = "applications" | "reports";
+
 const Route = () => {
   const ld = useLoaderData<typeof loader>();
   const { revalidate } = useRevalidator();
@@ -66,15 +105,23 @@ const Route = () => {
       revalidate();
     },
   });
+  const [tab, setTab] = useState<TabOption>("applications");
 
   return (
-    <Page classNames={{ content: "lg:px-6", container: "px-2" }}>
-      <ApplicationsTable
-        data={ld.applications}
-        onStatusUpdate={async ({ applicationId, status }) => {
-          await updateApplicationStatus({ status, applicationId });
-        }}
-      />
+    <Page classNames={{ content: "lg:px-6 gap-8", container: "px-2" }}>
+      <Tabs selectedKey={tab} onSelectionChange={(value) => setTab(value as TabOption)}>
+        <Tab key="applications" title="Applications" />
+        <Tab key="reports" title="Reports" />
+      </Tabs>
+      {tab === "reports" && <div>123</div>}
+      {tab === "applications" && (
+        <ApplicationsTable
+          data={ld.applications}
+          onStatusUpdate={async ({ applicationId, status }) => {
+            await updateApplicationStatus({ status, applicationId });
+          }}
+        />
+      )}
     </Page>
   );
 };
@@ -134,6 +181,33 @@ const ApplicationsTable: FC<{
               {(columnKey) => (
                 <TableCell>
                   <TableCellContent data={item} columnKey={columnKey.toString()} />
+                </TableCell>
+              )}
+            </TableRow>
+          )}
+        </TableBody>
+      </Table>
+    </>
+  );
+};
+
+const _ReportsTable: FC<{
+  data: ReportsTableData[];
+  onStatusUpdate: (args: { applicationId: string; status: ApplicationStatus }) => void | Promise<void>;
+}> = (props) => {
+  return (
+    <>
+      <Table aria-label="Table">
+        <TableHeader columns={columns}>
+          {(column) => <TableColumn key={column.key}>{column.label}</TableColumn>}
+        </TableHeader>
+        <TableBody items={props.data}>
+          {(item) => (
+            <TableRow key={item.id} className="hover:bg-gray-100">
+              {(_columnKey) => (
+                <TableCell>
+                  <div />
+                  {/* <TableCellContent data={item} columnKey={columnKey.toString()} /> */}
                 </TableCell>
               )}
             </TableRow>

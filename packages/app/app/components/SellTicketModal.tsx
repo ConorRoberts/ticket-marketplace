@@ -1,18 +1,6 @@
 import { valibotResolver } from "@hookform/resolvers/valibot";
 import { CalendarDate, getLocalTimeZone, today } from "@internationalized/date";
-import {
-  Autocomplete,
-  AutocompleteItem,
-  Button,
-  DatePicker,
-  Input,
-  Modal,
-  ModalBody,
-  ModalContent,
-  ModalFooter,
-  ModalHeader,
-} from "@nextui-org/react";
-import { eventType } from "common/schema";
+import { Button, DatePicker, Input, Modal, ModalBody, ModalContent, ModalFooter, ModalHeader } from "@nextui-org/react";
 import type { FC } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -31,7 +19,7 @@ const ticketListingFormSchema = v.object({
   event: v.object({
     name: v.pipe(v.string(), v.minLength(1)),
     imageId: v.string(),
-    type: v.picklist(eventType),
+    // type: v.picklist(eventType),
     date: v.custom<CalendarDate>(
       (value) => value instanceof CalendarDate && value.compare(today(getLocalTimeZone())) >= 0,
       "Must be a date in the future",
@@ -49,7 +37,7 @@ const getDefaultFormData = (): TicketListingFormInputData => {
     event: {
       name: "",
       date: today(getLocalTimeZone()),
-      type: "concert" as const,
+      // type: "concert" as const,
       imageId: images.imageIds.placeholder.ticketListing,
     },
   };
@@ -62,7 +50,7 @@ const ticketListingFormOutputSchema = v.object({
   event: v.object({
     name: v.string(),
     imageId: v.string(),
-    type: v.picklist(eventType),
+    // type: v.picklist(eventType),
     date: v.date(),
   }),
 });
@@ -95,7 +83,7 @@ export const SellTicketModal: FC<{
   const imageUrl = images.optimizeId(form.getValues("event.imageId"), { width: 500 });
 
   return (
-    <Modal size="xl" isOpen={props.open} onOpenChange={props.onOpenChange}>
+    <Modal size="xl" isOpen={props.open} onOpenChange={props.onOpenChange} scrollBehavior="inside">
       <ModalContent>
         {(onClose) => (
           <>
@@ -230,7 +218,7 @@ export const SellTicketModal: FC<{
                       </FormItem>
                     )}
                   />
-                  <FormField
+                  {/* <FormField
                     control={form.control}
                     name="event.type"
                     render={({ field, fieldState }) => (
@@ -245,7 +233,6 @@ export const SellTicketModal: FC<{
                           >
                             {eventType.map((e) => (
                               <AutocompleteItem key={e} value={e} className="capitalize">
-                                {/* Capitalize */}
                                 {e
                                   .split(" ")
                                   .map((word) => `${word[0]?.toUpperCase()}${word.slice(1)}`)
@@ -256,7 +243,7 @@ export const SellTicketModal: FC<{
                         </FormControl>
                       </FormItem>
                     )}
-                  />
+                  /> */}
                   <ModalFooter>
                     <Button
                       className="w-full"

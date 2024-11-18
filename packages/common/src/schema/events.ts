@@ -12,7 +12,9 @@ export const events = sqliteTable(
   {
     ...sharedColumns.common,
     name: text("name").notNull(),
-    type: text("type", { enum: eventType }).notNull(),
+    type: text("type", { enum: eventType })
+      .notNull()
+      .$default(() => "other"),
     date: int("date", { mode: "timestamp_ms" }).notNull(),
     imageId: text("image_id").notNull(),
   },

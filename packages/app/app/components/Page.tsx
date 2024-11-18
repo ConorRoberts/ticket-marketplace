@@ -9,7 +9,7 @@ export const Page: FC<
 > = ({ children, classNames, underNav, ...props }) => {
   return (
     <div
-      className={cn("flex flex-col pt-2 px-6 lg:pt-16 flex-1", underNav && "-mt-16", classNames?.container)}
+      className={cn("flex flex-col pt-2 px-4 lg:pt-16 flex-1", underNav && "-mt-16", classNames?.container)}
       {...props}
     >
       <div className={cn("flex flex-col mx-auto w-full max-w-5xl", classNames?.content)}>{children}</div>

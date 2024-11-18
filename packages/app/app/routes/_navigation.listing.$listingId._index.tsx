@@ -19,6 +19,7 @@ import type { MetaFunction } from "@remix-run/node";
 import { useLoaderData, useNavigate, useRevalidator } from "@remix-run/react";
 import { type LoaderFunctionArgs, redirect } from "@remix-run/server-runtime";
 import { useMutation } from "@tanstack/react-query";
+import { parsePubSubMessage } from "common/pubsub";
 import { ticketListings } from "common/schema";
 import { eq } from "drizzle-orm";
 import { PencilIcon, SettingsIcon, TicketIcon, TrashIcon } from "lucide-react";
@@ -90,13 +91,18 @@ const Route = () => {
       navigate("/");
     },
   });
+  const utils = trpc.useUtils();
 
   const env = useEnv();
   const _socket = usePartySocket({
     host: env.PUBLIC_PARTYKIT_URL,
     room: loaderData.listing.id,
     onMessage: (e) => {
-      console.log(e);
+      const ev = parsePubSubMessage(e.data);
+
+      if (ev.type === "ticketPurchase") {
+        utils.notifications.getAll.refetch();
+      }
     },
   });
 
@@ -113,7 +119,7 @@ const Route = () => {
   };
 
   return (
-    <Page classNames={{ container: "relative" }}>
+    <Page classNames={{ container: "relative", content: "pb-8" }}>
       <Modal isOpen={isEmailDialogOpen} onOpenChange={onEmailDialogOpenChange}>
         <ModalContent>
           <ModalHeader>Provide your email</ModalHeader>
@@ -187,24 +193,26 @@ const Route = () => {
           )}
         </ModalContent>
       </Modal>
-      <SellTicketModal
-        open={isEditOpen}
-        onOpenChange={onEditOpenChange}
-        key={JSON.stringify(loaderData.listing)}
-        initialValue={{
-          ...loaderData.listing,
-          unitPriceDollars: Math.floor(loaderData.listing.unitPriceCents / 100).toString(),
-          quantity: loaderData.listing.quantity.toString(),
-          event: {
-            ...loaderData.listing.event,
-            date: toCalendarDate(fromDate(loaderData.listing.event.date, getLocalTimeZone())),
-          },
-        }}
-        onSubmit={async (data) => {
-          await updateListing({ listingId: loaderData.listing.id, data });
-          revalidate();
-        }}
-      />
+      {isEditOpen && (
+        <SellTicketModal
+          open={isEditOpen}
+          onOpenChange={onEditOpenChange}
+          key={JSON.stringify(loaderData.listing)}
+          initialValue={{
+            ...loaderData.listing,
+            unitPriceDollars: Math.floor(loaderData.listing.unitPriceCents / 100).toString(),
+            quantity: loaderData.listing.quantity.toString(),
+            event: {
+              ...loaderData.listing.event,
+              date: toCalendarDate(fromDate(loaderData.listing.event.date, getLocalTimeZone())),
+            },
+          }}
+          onSubmit={async (data) => {
+            await updateListing({ listingId: loaderData.listing.id, data });
+            revalidate();
+          }}
+        />
+      )}
 
       <div className="grid lg:grid-cols-2 gap-8 lg:gap-16">
         <div className="w-full h-[500px] relative rounded-[30px] overflow-hidden">

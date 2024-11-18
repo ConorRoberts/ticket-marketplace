@@ -8,9 +8,9 @@ import { db } from "../db.server";
 import { env } from "../env.server";
 import { logger } from "../logger";
 import { stripe } from "../stripe";
-import { publicProcedure, router, validatedMerchantProcedure } from "./trpcServerConfig";
 import { ticketListingChatMessagesRouter } from "./ticketListingChatMessagesRouter";
 import { ticketListingTransactionsRouter } from "./ticketListingTransactionsRouter";
+import { publicProcedure, router, validatedMerchantProcedure } from "./trpcServerConfig";
 
 export const ticketListingsRouter = router({
   transactions: ticketListingTransactionsRouter,
@@ -22,7 +22,7 @@ export const ticketListingsRouter = router({
           description: v.string(),
           quantity: v.pipe(v.number(), v.minValue(1)),
           unitPriceCents: v.pipe(v.number(), v.minValue(0)),
-          event: eventSchema,
+          event: v.omit(eventSchema, ["type"]),
         }),
       ),
     )
@@ -80,7 +80,7 @@ export const ticketListingsRouter = router({
             description: v.string(),
             quantity: v.pipe(v.number(), v.minValue(1)),
             unitPriceCents: v.pipe(v.number(), v.minValue(0)),
-            event: eventSchema,
+            event: v.omit(eventSchema, ["type"]),
           }),
         }),
       ),

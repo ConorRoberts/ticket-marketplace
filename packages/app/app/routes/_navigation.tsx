@@ -3,7 +3,7 @@ import { useUser } from "@clerk/remix";
 import { Navbar, NavbarBrand, NavbarContent, NavbarItem } from "@nextui-org/navbar";
 import { Button, useDisclosure } from "@nextui-org/react";
 import { Link, NavLink, Outlet, useLocation, useNavigate, useRevalidator } from "@remix-run/react";
-import { CreditCardIcon, InboxIcon, LogInIcon, MenuIcon, ShieldIcon, TicketIcon } from "lucide-react";
+import { CreditCardIcon, HomeIcon, InboxIcon, LogInIcon, MenuIcon, ShieldIcon, TicketIcon } from "lucide-react";
 import { type ComponentProps, type FC, useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Drawer } from "vaul";
@@ -73,18 +73,11 @@ const DesktopNavLink: FC<ComponentProps<typeof NavLink>> = ({ children, classNam
   );
 };
 
+const mobileNavLinkStyle =
+  "font-medium text-sm h-8 px-3 rounded-sm flex gap-2 items-center hover:bg-gray-100 transition whitespace-nowrap text-left";
 const MobileNavLink: FC<ComponentProps<typeof NavLink>> = ({ children, className, ...props }) => {
   return (
-    <NavLink
-      {...props}
-      className={(state) =>
-        cn(
-          "font-medium text-sm h-8 px-3 rounded-sm flex gap-2 items-center hover:bg-gray-100 transition whitespace-nowrap text-left",
-          state.isActive && "bg-gray-50",
-          className,
-        )
-      }
-    >
+    <NavLink {...props} className={(state) => cn(mobileNavLinkStyle, state.isActive && "bg-gray-50", className)}>
       {children}
     </NavLink>
   );
@@ -122,6 +115,13 @@ const CustomUserButton: FC<ComponentProps<typeof UserButton>> = (props) => {
             }}
           />
         )}
+        <UserButton.Action
+          label="Purchase history"
+          labelIcon={<TicketIcon className="size-3 m-auto" />}
+          onClick={() => {
+            navigate("/purchase-history");
+          }}
+        />
       </UserButton.MenuItems>
     </UserButton>
   );
@@ -159,6 +159,29 @@ const Layout = () => {
     },
   });
 
+  const handleSellTicketModalOpen = () => {
+    if (!merchant) {
+      return;
+    }
+
+    if (merchant.isApplicationPending) {
+      toast.info("Your application is currently under review.");
+      return;
+    }
+
+    if (!merchant.isApproved) {
+      // TODO need to create an "apply" modal
+      toggleMerchantApplyOpen();
+      return;
+    }
+
+    if (!merchant.isStripeAccountSetup && merchant.isApproved) {
+      sendToast("Please connect your bank account before selling tickets.");
+      return;
+    }
+    onSellModalOpenChange();
+  };
+
   return (
     <>
       <SellTicketModal
@@ -180,6 +203,9 @@ const Layout = () => {
       <NotificationsModal open={isNotificationsModalOpen} onOpenChange={onNotificationsModalOpenChange} />
       <div className="flex min-h-screen flex-col relative">
         <div className="flex items-center justify-end isolate z-50 fixed bottom-0 inset-x-0 h-16 lg:hidden rounded-tl-3xl bg-white border ml-auto w-max">
+          <Link className="flex h-10 w-16 items-start justify-center pt-2" to="/login">
+            <HomeIcon className="size-6" />
+          </Link>
           {isSignedIn ? (
             <CustomUserButton
               appearance={{
@@ -188,12 +214,10 @@ const Layout = () => {
             />
           ) : (
             <Link className="flex h-10 w-16 items-start justify-center pt-2" to="/login">
-              <div className="relative">
-                <LogInIcon className="size-6" />
-              </div>
+              <LogInIcon className="size-6" />
             </Link>
           )}
-          <MobileNavigation key={location.pathname} />
+          <MobileNavigation key={location.pathname} onSellTicketOpen={handleSellTicketModalOpen} />
         </div>
         <Navbar className="w-full max-w-5xl mx-auto hidden lg:block bg-transparent" position="static">
           <NavbarContent>
@@ -230,33 +254,7 @@ const Layout = () => {
                   <InboxIcon className="size-4" />
                 </div>
               </button>
-              <Button
-                type="button"
-                variant="light"
-                onClick={() => {
-                  if (!merchant) {
-                    return;
-                  }
-
-                  if (merchant.isApplicationPending) {
-                    toast.info("Your application is currently under review.");
-                    return;
-                  }
-
-                  if (!merchant.isApproved) {
-                    // TODO need to create an "apply" modal
-                    toggleMerchantApplyOpen();
-                    return;
-                  }
-
-                  if (!merchant.isStripeAccountSetup && merchant.isApproved) {
-                    sendToast("Please connect your bank account before selling tickets.");
-                    return;
-                  }
-                  onSellModalOpenChange();
-                }}
-                className={desktopNavLinkStyle}
-              >
+              <Button type="button" variant="light" onClick={handleSellTicketModalOpen} className={desktopNavLinkStyle}>
                 <p>Sell Tickets</p>
                 <TicketIcon className="size-4" />
               </Button>
@@ -273,7 +271,7 @@ const Layout = () => {
   );
 };
 
-const MobileNavigation = () => {
+const MobileNavigation: FC<{ onSellTicketOpen: () => void }> = (props) => {
   const [open, setOpen] = useState(false);
 
   return (
@@ -291,7 +289,21 @@ const MobileNavigation = () => {
           <div className="mx-auto my-2 h-1.5 w-1/6 rounded-full bg-gray-300" />
 
           <div className="flex flex-col gap-2 p-8">
-            <MobileNavLink to="/">Home</MobileNavLink>
+            <MobileNavLink to="/">
+              <HomeIcon className="size-4" />
+              <span>Home</span>
+            </MobileNavLink>
+            <button
+              type="button"
+              onClick={() => {
+                setOpen(false);
+                props.onSellTicketOpen();
+              }}
+              className={mobileNavLinkStyle}
+            >
+              <TicketIcon className="size-4" />
+              <span>Sell Tickets</span>
+            </button>
           </div>
         </Drawer.Content>
         <Drawer.Overlay />
