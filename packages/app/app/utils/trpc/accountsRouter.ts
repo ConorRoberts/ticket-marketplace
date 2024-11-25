@@ -30,6 +30,9 @@ export const accountsRouter = router({
         throw new TRPCError({ code: "BAD_REQUEST", message: "Stripe account is already setup" });
       }
 
+      const fullName =
+        ctx.user.firstName && ctx.user.lastName ? `${ctx.user.firstName} ${ctx.user.lastName}` : undefined;
+
       const email = ctx.user.primaryEmailAddressId
         ? await clerk.emailAddresses.getEmailAddress(ctx.user.primaryEmailAddressId)
         : undefined;
@@ -39,6 +42,10 @@ export const accountsRouter = router({
         business_profile: {
           url: `${env.server.PUBLIC_WEBSITE_URL}/merchants/${merchant.id}`,
           name: ctx.user.firstName && ctx.user.lastName ? `${ctx.user.firstName} ${ctx.user.lastName}` : undefined,
+        },
+        business_type: "individual",
+        company: {
+          name: fullName,
         },
         capabilities: {
           card_payments: { requested: true },

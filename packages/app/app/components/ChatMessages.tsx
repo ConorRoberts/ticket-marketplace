@@ -22,18 +22,26 @@ export const ChatMessages: FC<{
 }> = (props) => {
   const scroll = useScroll(props.containerRef ? { container: props.containerRef } : undefined);
   const [side, setSide] = useState<"top" | "bottom" | "none" | null>(null);
+  const messagesRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     return scroll.scrollYProgress.on("change", (value) => {
-      if (value < 0.05) {
-        setSide("top");
-      } else if (value > 0.95) {
-        setSide("bottom");
+      const messagesHeight = messagesRef?.current?.clientHeight ?? 0;
+      const containerHeight = props.containerRef?.current?.clientHeight ?? 0;
+
+      if (messagesHeight < containerHeight) {
+        setSide(null);
       } else {
-        setSide("none");
+        if (value < 0.05) {
+          setSide("top");
+        } else if (value > 0.95) {
+          setSide("bottom");
+        } else {
+          setSide("none");
+        }
       }
     });
-  }, [scroll]);
+  }, [scroll, props.containerRef]);
 
   return (
     <div className={cn("flex flex-col flex-1 p-2 gap-2", props.className)}>
@@ -72,7 +80,7 @@ export const ChatMessages: FC<{
             }
           }}
         >
-          <div className="flex flex-col gap-2 z-0">
+          <div className="flex flex-col gap-2 z-0" ref={messagesRef}>
             {props.messages.map((e) => (
               <Message data={e} key={e.id} />
             ))}
@@ -163,14 +171,7 @@ const ChatMessageInput: FC<{ onSubmit: (message: string) => void }> = (props) =>
         value={value}
         key={textAreaResetKey.toString()}
         onValueChange={(t) => setValue(t)}
-        onChange={(e) => {
-          if (e.target) {
-            e.target.style.height = "auto";
-            e.target.style.height = `${e.target.scrollHeight}px`;
-          }
-        }}
         minRows={1}
-        onResize={(e) => console.log(e)}
         classNames={{ input: "mr-6" }}
         endContent={
           <button type="submit" className="absolute top-1/2 right-4 -translate-y-1/2 ">

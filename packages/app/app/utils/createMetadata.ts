@@ -11,8 +11,8 @@ const WEBSITE_URL =
   process.env.NODE_ENV === "development" ? "http://localhost:3000" : "https://ticket-marketplace.fly.dev";
 
 export const seo = {
-  name: "Ticket Marketplace",
-  description: "Ticket marketplace",
+  name: "TixSnap",
+  description: "TixSnap",
   imageId: "",
 };
 
