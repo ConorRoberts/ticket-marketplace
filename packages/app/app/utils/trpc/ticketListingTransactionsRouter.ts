@@ -1,11 +1,26 @@
-import { publicProcedure, router } from "./trpcServerConfig";
+import { ticketListingTransactions } from "common/schema";
+import { eq } from "drizzle-orm";
 import * as v from "valibot";
+import { db } from "../db.server";
+import { router, transactionProcedure } from "./trpcServerConfig";
 
 export const ticketListingTransactionsRouter = router({
-  completeTransaction: publicProcedure.input(v.parser(v.object({ transactionId: v.string() }))).mutation(() => {
-    return null;
-  }),
-  createReport: publicProcedure.mutation(() => {
+  completeTransaction: transactionProcedure
+    .input(v.parser(v.object({ rating: v.optional(v.number()) })))
+    .mutation(async ({ input }) => {
+      await db
+        .update(ticketListingTransactions)
+        .set({ completedAt: new Date() })
+        .where(eq(ticketListingTransactions.id, input.transactionId));
+
+      return null;
+    }),
+  createReport: transactionProcedure.input(v.parser(v.object({ reason: v.string() }))).mutation(async ({ input }) => {
+    await db
+      .update(ticketListingTransactions)
+      .set({ reportedAt: new Date(), reportReason: input.reason })
+      .where(eq(ticketListingTransactions.id, input.transactionId));
+
     return null;
   }),
 });

@@ -1,0 +1,1 @@
+ALTER TABLE `ticket_listing_transactions` ADD `report_reason` text;

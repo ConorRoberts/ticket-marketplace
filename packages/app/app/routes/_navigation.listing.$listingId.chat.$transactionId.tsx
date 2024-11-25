@@ -11,7 +11,7 @@ import {
 } from "@nextui-org/react";
 import { Select, SelectItem } from "@nextui-org/select";
 import { type LoaderFunctionArgs, type MetaFunction, redirect } from "@remix-run/node";
-import { useLoaderData } from "@remix-run/react";
+import { useLoaderData, useNavigate } from "@remix-run/react";
 import { parsePubSubMessage } from "common/pubsub";
 import { type ChatMessage, ticketListingTransactions } from "common/schema";
 import { eq } from "drizzle-orm";
@@ -102,6 +102,7 @@ const Route = () => {
   const container = useRef<HTMLDivElement>(null);
   const isAtBottom = useRef(true);
   const env = useEnv();
+  const navigate = useNavigate();
   const [showNewMessage, setShowNewMessage] = useState(false);
   const { isOpen: isReportOpen, onOpenChange: toggleReportOpen } = useDisclosure();
   const { isOpen: isCompleteOpen, onOpenChange: toggleCompleteOpen } = useDisclosure();
@@ -116,6 +117,12 @@ const Route = () => {
   }, []);
 
   const { mutateAsync: createMessage } = trpc.listings.chat.createMessage.useMutation();
+  const { mutateAsync: completeTransaction, isPending: isCompleteLoading } =
+    trpc.listings.transactions.completeTransaction.useMutation({
+      onSuccess: () => {
+        navigate("/");
+      },
+    });
 
   usePartySocket({
     room: ld.transaction.id,
@@ -191,7 +198,12 @@ const Route = () => {
           </ModalBody>
           <ModalFooter>
             <Button variant="light">Go Back</Button>
-            <Button color="success" className="text-white">
+            <Button
+              color="success"
+              className="text-white"
+              onClick={() => completeTransaction({ transactionId: ld.transaction.id })}
+              isLoading={isCompleteLoading}
+            >
               Complete Transaction
             </Button>
           </ModalFooter>

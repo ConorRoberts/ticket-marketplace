@@ -1,5 +1,5 @@
 import { TRPCError, initTRPC } from "@trpc/server";
-import { merchants } from "common/schema";
+import { merchants, ticketListingTransactions } from "common/schema";
 import { eq } from "drizzle-orm";
 import superjson from "superjson";
 import * as v from "valibot";
@@ -100,3 +100,34 @@ export const platformAdminProcedure = protectedProcedure.use(async ({ next, ctx 
 
   return next();
 });
+
+export const transactionProcedure = publicProcedure
+  .input(v.parser(v.object({ transactionId: v.string() })))
+  .use(async ({ next, ctx, input }) => {
+    const transaction = await db.query.ticketListingTransactions.findFirst({
+      where: eq(ticketListingTransactions.id, input.transactionId),
+      with: {
+        messages: true,
+        ticketListing: {
+          with: {
+            merchant: true,
+          },
+        },
+      },
+    });
+
+    if (!transaction) {
+      throw new Error("Could not find transaction");
+    }
+
+    const transactionHasAuthenticatedBuyer = Boolean(transaction.buyerUserId);
+    const isBuyerOrSeller =
+      ctx.user &&
+      (ctx.user.id === transaction.ticketListing.merchant.userId || ctx.user.id === transaction.buyerUserId);
+
+    if (transactionHasAuthenticatedBuyer && !isBuyerOrSeller) {
+      throw Error("Authentication required");
+    }
+
+    return next({ ctx: { ...ctx, transaction } });
+  });
