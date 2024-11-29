@@ -16,7 +16,17 @@ const config: Config = {
       },
     },
   },
-  plugins: [animate, nextui({})],
+  plugins: [
+    animate,
+    nextui({
+      layout: {
+        borderWidth: {
+          small: "1px",
+          medium: "1px",
+        },
+      },
+    }),
+  ],
 };
 
 export default config;

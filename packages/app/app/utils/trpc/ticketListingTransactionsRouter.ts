@@ -15,12 +15,14 @@ export const ticketListingTransactionsRouter = router({
 
       return null;
     }),
-  createReport: transactionProcedure.input(v.parser(v.object({ reason: v.string() }))).mutation(async ({ input }) => {
-    await db
-      .update(ticketListingTransactions)
-      .set({ reportedAt: new Date(), reportReason: input.reason })
-      .where(eq(ticketListingTransactions.id, input.transactionId));
+  createReport: transactionProcedure
+    .input(v.parser(v.object({ reason: v.string(), description: v.string() })))
+    .mutation(async ({ input }) => {
+      await db
+        .update(ticketListingTransactions)
+        .set({ reportedAt: new Date(), reportReason: input.reason, reportDescription: input.description })
+        .where(eq(ticketListingTransactions.id, input.transactionId));
 
-    return null;
-  }),
+      return null;
+    }),
 });

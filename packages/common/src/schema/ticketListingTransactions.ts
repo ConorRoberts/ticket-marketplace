@@ -18,6 +18,7 @@ export const ticketListingTransactions = sqliteTable(
     buyerRating: int("buyer_rating"),
     reportedAt: int("reported_at", { mode: "timestamp_ms" }),
     reportReason: text("report_reason"),
+    reportDescription: text("report_description"),
     completedAt: int("completed_at", { mode: "timestamp_ms" }),
     stripeCheckoutSessionId: text("stripe_checkout_session_id"),
     ticketListingId: text("ticket_listing_id")

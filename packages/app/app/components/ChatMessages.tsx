@@ -1,25 +1,24 @@
-import { Button, Textarea } from "@nextui-org/react";
+import { Textarea } from "@nextui-org/react";
 import type { ChatMessage } from "common/schema";
 import { AnimatePresence, useScroll } from "framer-motion";
 import { motion } from "framer-motion";
-import { ArrowDownCircleIcon, ArrowRightIcon, CheckIcon, OctagonAlert } from "lucide-react";
-import { type FC, type RefObject, useCallback, useEffect, useRef, useState } from "react";
+import { ArrowDownCircleIcon, ArrowRightIcon } from "lucide-react";
+import { type FC, type PropsWithChildren, type RefObject, useCallback, useEffect, useRef, useState } from "react";
 import type React from "react";
 import { cn } from "~/utils/cn";
 
-export const ChatMessages: FC<{
-  onMessageSend: (message: string) => void;
-  messages: ChatMessage[];
-  className?: string;
-  bottomRef?: RefObject<HTMLDivElement>;
-  containerRef?: RefObject<HTMLDivElement>;
-  showNewMessage?: boolean;
-  onNewMessageClick?: () => void;
-  onReport: () => void;
-  onComplete: () => void;
-  onScrollChange?: (event: React.UIEvent<HTMLDivElement, UIEvent>, additionalData: { isAtBottom: boolean }) => void;
-  sender: ChatMessage["sender"];
-}> = (props) => {
+export const ChatMessages: FC<
+  PropsWithChildren<{
+    onMessageSend?: (message: string) => void;
+    messages: ChatMessage[];
+    className?: string;
+    bottomRef?: RefObject<HTMLDivElement>;
+    containerRef?: RefObject<HTMLDivElement>;
+    showNewMessage?: boolean;
+    onNewMessageClick?: () => void;
+    onScrollChange?: (event: React.UIEvent<HTMLDivElement, UIEvent>, additionalData: { isAtBottom: boolean }) => void;
+  }>
+> = (props) => {
   const scroll = useScroll(props.containerRef ? { container: props.containerRef } : undefined);
   const [side, setSide] = useState<"top" | "bottom" | "none" | null>(null);
   const messagesRef = useRef<HTMLDivElement>(null);
@@ -108,27 +107,8 @@ export const ChatMessages: FC<{
         </AnimatePresence>
       </div>
       <div className="mt-auto shrink-0 flex flex-col gap-2">
-        <ChatMessageInput onSubmit={props.onMessageSend} />
-        {props.sender === "buyer" && (
-          <div className="flex gap-2 items-center justify-center">
-            <Button
-              color="danger"
-              variant="light"
-              endContent={<OctagonAlert className="size-4" />}
-              onClick={props.onReport}
-            >
-              Report
-            </Button>
-            <Button
-              color="success"
-              endContent={<CheckIcon className="size-4" />}
-              className="text-white"
-              onClick={props.onComplete}
-            >
-              Complete
-            </Button>
-          </div>
-        )}
+        {props.onMessageSend && <ChatMessageInput onSubmit={props.onMessageSend} />}
+        {props.children}
       </div>
     </div>
   );
