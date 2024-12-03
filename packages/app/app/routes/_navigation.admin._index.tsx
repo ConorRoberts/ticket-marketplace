@@ -3,7 +3,7 @@ import { Tab, Tabs } from "@nextui-org/react";
 import type { LoaderFunctionArgs, MetaFunction } from "@remix-run/node";
 import { redirect, useLoaderData, useNavigate, useRevalidator } from "@remix-run/react";
 import { merchantApplications, merchants, ticketListingTransactions } from "common/schema";
-import { and, eq, inArray, isNotNull } from "drizzle-orm";
+import { and, eq, inArray, isNotNull, isNull } from "drizzle-orm";
 import { useState } from "react";
 import { AdminApplicationsTable } from "~/components/AdminApplicationsTable";
 import { AdminReportsTable } from "~/components/AdminReportsTable";
@@ -41,7 +41,7 @@ export const loader = async (args: LoaderFunctionArgs) => {
   });
 
   const reportedTransactions = await db.query.ticketListingTransactions.findMany({
-    where: isNotNull(ticketListingTransactions.reportedAt),
+    where: and(isNotNull(ticketListingTransactions.reportedAt), isNull(ticketListingTransactions.reportClosedAt)),
     with: {
       messages: true,
       ticketListing: {

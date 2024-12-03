@@ -3,6 +3,7 @@ import { events, eventSchema, ticketListings } from "common/schema";
 import { and, eq } from "drizzle-orm";
 import { omit } from "remeda";
 import * as v from "valibot";
+import { CONSTANT_CONFIG } from "~/config/config";
 import { createCheckoutMetadata } from "../checkoutMetadataSchema";
 import { db } from "../db.server";
 import { env } from "../env.server";
@@ -21,38 +22,34 @@ export const ticketListingsRouter = router({
         v.object({
           description: v.string(),
           quantity: v.pipe(v.number(), v.minValue(1)),
-          unitPriceCents: v.pipe(v.number(), v.minValue(0)),
+          unitPriceCents: v.number(),
           event: v.omit(eventSchema, ["type"]),
         }),
       ),
     )
     .mutation(async ({ ctx, input }) => {
-      let stripeProductId: string | null = null;
-      let stripePriceId: string | null = null;
-
-      if (input.unitPriceCents > 0) {
-        const product = await stripe.products.create(
-          {
-            name: `${input.quantity}x - ${input.event.name}`,
-            default_price_data: {
-              currency: "cad",
-              unit_amount: input.unitPriceCents,
-            },
+      const product = await stripe.products.create(
+        {
+          name: `${input.quantity}x - ${input.event.name}`,
+          default_price_data: {
+            currency: "cad",
+            unit_amount: input.unitPriceCents,
           },
-          { stripeAccount: ctx.merchant.stripeAccountId },
-        );
+        },
+        { stripeAccount: ctx.merchant.stripeAccountId },
+      );
 
-        stripeProductId = product.id;
+      const stripeProductId = product.id;
 
-        if (!product.default_price) {
-          throw new TRPCError({
-            code: "INTERNAL_SERVER_ERROR",
-            message: "Error creating Stripe price for new listing",
-          });
-        }
-
-        stripePriceId = typeof product.default_price === "string" ? product.default_price : product.default_price.id;
+      if (!product.default_price) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Error creating Stripe price for new listing",
+        });
       }
+
+      const stripePriceId =
+        typeof product.default_price === "string" ? product.default_price : product.default_price.id;
 
       return await db.transaction(async (tx) => {
         const newEvent = await tx.insert(events).values(input.event).returning().get();
@@ -184,15 +181,8 @@ export const ticketListingsRouter = router({
           mode: "payment",
           line_items: [
             {
-              adjustable_quantity:
-                listing.quantity > 1
-                  ? {
-                      enabled: true,
-                      minimum: 1,
-                      maximum: listing.quantity,
-                    }
-                  : undefined,
-              quantity: 1,
+              adjustable_quantity: { enabled: false },
+              quantity: listing.quantity,
               price: listing.stripePriceId,
             },
           ],
@@ -204,6 +194,11 @@ export const ticketListingsRouter = router({
               userId: ctx.user?.id ?? null,
             },
           }),
+          payment_intent_data: {
+            application_fee_amount: Math.floor(
+              listing.quantity * listing.unitPriceCents * CONSTANT_CONFIG.transactionFeeMultiplier,
+            ),
+          },
         },
         { stripeAccount: listing.merchant.stripeAccountId },
       );

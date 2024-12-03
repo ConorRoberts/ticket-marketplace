@@ -12,6 +12,7 @@ export const merchants = sqliteTable(
     userId: text("user_id").notNull().unique(),
     stripeAccountId: text("stripe_account_id"),
     isStripeAccountSetup: int("is_stripe_account_setup", { mode: "boolean" }).default(false).notNull(),
+    bannedAt: int("banned_at", { mode: "timestamp_ms" }),
     isApproved: int("is_approved", { mode: "boolean" })
       .default(false)
       .notNull()

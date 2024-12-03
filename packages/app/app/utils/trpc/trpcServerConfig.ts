@@ -85,6 +85,10 @@ export const validatedMerchantProcedure = merchantProcedure.use(async ({ next, c
     });
   }
 
+  if (ctx.merchant.bannedAt !== null) {
+    throw new TRPCError({ code: "BAD_REQUEST", message: "Merchant is banned" });
+  }
+
   return next({
     ctx: { ...ctx, merchant: { ...ctx.merchant, stripeAccountId } },
   });

@@ -228,8 +228,8 @@ const Route = () => {
           onScrollChange={(_e, data) => {
             isAtBottom.current = data.isAtBottom;
           }}
-          onMessageSend={(message) => {
-            createMessage({ message, transactionId: ld.transaction.id });
+          onMessageSend={async (message) => {
+            await createMessage({ message, transactionId: ld.transaction.id });
           }}
         >
           {ld.sender === "buyer" && (

@@ -8,7 +8,17 @@ import { publicProcedure, router } from "./trpcServerConfig";
 
 export const ticketListingChatMessagesRouter = router({
   createMessage: publicProcedure
-    .input(v.parser(v.object({ message: v.string(), transactionId: v.string() })))
+    .input(
+      v.parser(
+        v.object({
+          message: v.object({
+            message: v.string(),
+            attachments: v.array(v.object({ id: v.string(), type: v.picklist(["image"]) })),
+          }),
+          transactionId: v.string(),
+        }),
+      ),
+    )
     .mutation(async ({ ctx, input }) => {
       const transaction = await db.query.ticketListingTransactions.findFirst({
         where: eq(ticketListingTransactions.id, input.transactionId),
@@ -51,7 +61,8 @@ export const ticketListingChatMessagesRouter = router({
         .insert(ticketListingChatMessages)
         .values({
           listingId: transaction.ticketListingId,
-          message: input.message,
+          message: input.message.message,
+          attachments: input.message.attachments,
           transactionId: transaction.id,
           userId: ctx.user?.id ?? null,
         })
@@ -74,6 +85,7 @@ export const ticketListingChatMessagesRouter = router({
       const messages = await db.query.ticketListingChatMessages.findMany({
         where: inArray(ticketListingChatMessages.id, input.messageIds),
       });
+
       return [];
     }),
 });

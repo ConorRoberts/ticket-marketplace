@@ -1,0 +1,1 @@
+ALTER TABLE `ticket_listing_chat_messages` ADD `attachments` text DEFAULT '[]';

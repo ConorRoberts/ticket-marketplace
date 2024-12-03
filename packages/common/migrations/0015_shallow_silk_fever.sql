@@ -1,0 +1,1 @@
+ALTER TABLE `merchants` ADD `banned_at` integer;

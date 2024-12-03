@@ -191,7 +191,7 @@ export const SellTicketModal: FC<{
                       <FormItem>
                         <FormControl>
                           <Input
-                            label="Price ($CAD)"
+                            label="Price Per Ticket ($CAD)"
                             {...field}
                             type="number"
                             errorMessage={fieldState.error?.message}

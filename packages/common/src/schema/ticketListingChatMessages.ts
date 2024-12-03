@@ -7,6 +7,7 @@ import { ticketListingTransactions } from "./ticketListingTransactions";
 import { ticketListings } from "./ticketListings";
 
 export type ChatMessage = TicketListingChatMessage & { sender: "buyer" | "seller"; imageUrl: string };
+type ChatMessageAttachment = { type: "image"; id: string };
 
 export const ticketListingChatMessages = sqliteTable(
   "ticket_listing_chat_messages",
@@ -21,6 +22,7 @@ export const ticketListingChatMessages = sqliteTable(
     transactionId: text("transaction_id")
       .notNull()
       .references(() => ticketListingTransactions.id),
+    attachments: text("attachments", { mode: "json" }).$type<ChatMessageAttachment[]>().default([]).notNull(),
   },
   (_table) => ({}),
 );

@@ -1,5 +1,6 @@
 import type { ActionFunctionArgs, LoaderFunctionArgs } from "@remix-run/node";
 import { accountsRouter } from "./accountsRouter";
+import { adminRouter } from "./adminRouter";
 import { merchantsRouter } from "./merchantsRouter";
 import { notificationsRouter } from "./notificationsRouter";
 import { ticketListingsRouter } from "./ticketListingsRouter";
@@ -16,6 +17,7 @@ export const trpcRouter = router({
   accounts: accountsRouter,
   merchants: merchantsRouter,
   notifications: notificationsRouter,
+  admin: adminRouter,
 });
 
 export type TrpcRouter = typeof trpcRouter;

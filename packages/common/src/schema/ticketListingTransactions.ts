@@ -20,6 +20,8 @@ export const ticketListingTransactions = sqliteTable(
     reportReason: text("report_reason"),
     reportDescription: text("report_description"),
     completedAt: int("completed_at", { mode: "timestamp_ms" }),
+    refundedAt: int("refunded_at", { mode: "timestamp_ms" }),
+    reportClosedAt: int("report_closed_at", { mode: "timestamp_ms" }),
     stripeCheckoutSessionId: text("stripe_checkout_session_id"),
     ticketListingId: text("ticket_listing_id")
       .notNull()

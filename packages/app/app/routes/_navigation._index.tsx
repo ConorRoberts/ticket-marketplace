@@ -41,30 +41,31 @@ const Route = () => {
 
 const TicketListingPreview: FC<{ data: Awaited<ReturnType<typeof loader>>["listings"][number] }> = (props) => {
   return (
-    <>
-      <Link className="w-full relative rounded-lg overflow-hidden h-80" to={`/listing/${props.data.id}`}>
-        <div className="relative z-10 h-80 w-full flex flex-col rounded-lg flex-grow-0 flex-shrink-0 hover:brightness-[90%] transition border-gray-300/50">
-          <div className="w-full overflow-hidden flex-1 rounded-t-lg">
-            <Image imageId={props.data.event.imageId ?? ""} width={500} className="rounded-none" />
-          </div>
-          <div className="flex flex-col justify-end p-3">
-            <p className="font-semibold">{props.data.event.name}</p>
-            <p className="text-xs font-semibold text-gray-700">
-              <ClientDate date={props.data.event.date} format="DD/MM/YYYY" />
-            </p>
-          </div>
+    <Link
+      className="w-full relative rounded-lg overflow-hidden h-80 border border-gray-300 isolate"
+      to={`/listing/${props.data.id}`}
+    >
+      <div className="relative z-20 h-80 w-full flex flex-col rounded-lg flex-grow-0 flex-shrink-0 hover:brightness-[90%] transition border-gray-300/50">
+        <div className="w-full flex-1 rounded-t-lg overflow-hidden">
+          <Image imageId={props.data.event.imageId ?? ""} width={500} className="rounded-none" />
         </div>
-        <Noise grainSize={1.5} className="z-[2]" />
-        <div className="w-full overflow-hidden absolute z-[1] inset-0 blur-lg">
-          <Image
-            imageId={props.data.event.imageId ?? ""}
-            width={600}
-            options={{ brightness: 6 }}
-            className="rounded-none"
-          />
+        <div className="flex flex-col justify-end p-3 shrink-0">
+          <p className="font-semibold">{props.data.event.name}</p>
+          <p className="text-xs font-semibold text-gray-700">
+            <ClientDate date={props.data.event.date} format="DD/MM/YYYY" />
+          </p>
         </div>
-      </Link>
-    </>
+      </div>
+      <Noise grainSize={1.5} className="z-[2]" />
+      <div className="w-full absolute z-[1] inset-0 blur-lg">
+        <Image
+          imageId={props.data.event.imageId ?? ""}
+          width={600}
+          options={{ brightness: 6 }}
+          className="rounded-none"
+        />
+      </div>
+    </Link>
   );
 };
 

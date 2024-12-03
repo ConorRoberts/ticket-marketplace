@@ -10,8 +10,8 @@ export type ReportsTableData = TicketListingTransaction & {
 
 const reportsTableColumns = [
   {
-    key: "imageUrl",
-    label: "Image",
+    key: "ticketListing.event.name",
+    label: "Event",
   },
   {
     key: "reportReason",
@@ -52,6 +52,16 @@ export const AdminReportsTable: FC<{
 const ReportTableCellContent: FC<{ data: ReportsTableData; columnKey: string }> = (props) => {
   if (props.columnKey === "createdAt") {
     return <ClientDate date={props.data.createdAt} calendar />;
+  }
+
+  const splitKey = props.columnKey.split(".");
+  if (splitKey.length > 1) {
+    let val: any = props.data;
+    for (const k of splitKey) {
+      val = val[k];
+    }
+
+    return val;
   }
 
   return getKeyValue(props.data, props.columnKey);

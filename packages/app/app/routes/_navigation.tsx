@@ -170,7 +170,6 @@ const Layout = () => {
     }
 
     if (!merchant.isApproved) {
-      // TODO need to create an "apply" modal
       toggleMerchantApplyOpen();
       return;
     }
@@ -185,8 +184,8 @@ const Layout = () => {
   return (
     <>
       <SellTicketModal
-        onSubmit={(data) => {
-          createListing(data);
+        onSubmit={async (data) => {
+          await createListing(data);
         }}
         open={isSellModalOpen}
         onOpenChange={onSellModalOpenChange}
@@ -223,7 +222,7 @@ const Layout = () => {
           <NavbarContent>
             <NavbarBrand className="flex-grow-0">
               <Link to="/">
-                <Logo className="size-8 shadow hover:brightness-[98%] transition" />
+                <Logo className="size-8" />
               </Link>
             </NavbarBrand>
             <NavbarItem>

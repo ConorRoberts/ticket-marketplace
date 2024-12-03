@@ -29,6 +29,7 @@ const messageTypes = [
       userId: v.nullable(v.string()),
       createdAt: v.date(),
       updatedAt: v.date(),
+      attachments: v.array(v.object({ id: v.string(), type: v.picklist(["image"]) })),
     }),
   }),
 ] as const;
