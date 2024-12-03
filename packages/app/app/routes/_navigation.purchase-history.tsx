@@ -75,10 +75,10 @@ const TransactionItem: FC<{ data: Awaited<ReturnType<typeof loader>>["transactio
       <button
         onClick={onOpenChange}
         key={props.data.id}
-        className="p-4 flex items-center gap-4 hover:bg-gray-100 transition max-w-full"
+        className="p-4 flex items-center gap-4 hover:bg-gray-100 transition w-full max-w-full"
         type="button"
       >
-        <div className="size-16">
+        <div className="size-20">
           <Image imageId={props.data.ticketListing.event.imageId} width={250} />
         </div>
         <div className="flex-1 overflow-hidden text-left">

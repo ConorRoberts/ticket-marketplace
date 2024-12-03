@@ -50,7 +50,7 @@ export const ChatMessages: FC<
   }, [scroll, props.containerRef]);
 
   return (
-    <div className={cn("flex flex-col flex-1 p-2 gap-2", props.className)}>
+    <div className={cn("flex flex-col flex-1 p-2 gap-2 isolate", props.className)}>
       <div className="flex flex-col gap-2 flex-1 relative overflow-hidden">
         <AnimatePresence>
           {(side === "bottom" || side === "none") && (

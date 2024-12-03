@@ -1,29 +1,18 @@
 import { getAuth } from "@clerk/remix/ssr.server";
-import {
-  Button,
-  Modal,
-  ModalBody,
-  ModalContent,
-  ModalFooter,
-  ModalHeader,
-  Textarea,
-  useDisclosure,
-} from "@nextui-org/react";
-import { Select, SelectItem } from "@nextui-org/select";
+import { Button, Modal, ModalBody, ModalContent, ModalFooter, ModalHeader, useDisclosure } from "@nextui-org/react";
 import { type LoaderFunctionArgs, type MetaFunction, redirect } from "@remix-run/node";
 import { useLoaderData, useNavigate } from "@remix-run/react";
-import { useMutation } from "@tanstack/react-query";
 import { parsePubSubMessage } from "common/pubsub";
 import { type ChatMessage, ticketListingTransactions } from "common/schema";
 import { eq } from "drizzle-orm";
 import { CheckIcon, OctagonAlert } from "lucide-react";
 import usePartySocket from "partysocket/react";
-import { type FC, useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { omit } from "remeda";
-import { toast } from "sonner";
 import * as v from "valibot";
 import { ChatMessages } from "~/components/ChatMessages";
 import { Page } from "~/components/Page";
+import { ReportSellerForm } from "~/components/ReportSellerForm";
 import { createMetadata } from "~/utils/createMetadata";
 import { db } from "~/utils/db.server";
 import { formatChatMessages } from "~/utils/formatChatMessages";
@@ -98,6 +87,8 @@ const Route = () => {
   const [showNewMessage, setShowNewMessage] = useState(false);
   const { isOpen: isReportOpen, onOpenChange: toggleReportOpen } = useDisclosure();
   const { isOpen: isCompleteOpen, onOpenChange: toggleCompleteOpen } = useDisclosure();
+
+  const isCompleted = ld.transaction.completedAt !== null;
 
   const scrollToBottom = useCallback((scrollBehaviour: ScrollBehavior = "smooth") => {
     requestAnimationFrame(() => {
@@ -181,7 +172,7 @@ const Route = () => {
               to be in breach of the platform guidelines, the purchase will be refunded.
             </p> */}
 
-            <ReportForm
+            <ReportSellerForm
               onSubmit={async (data) => {
                 await createReport({
                   reason: data.reason,
@@ -204,7 +195,7 @@ const Route = () => {
           <ModalFooter>
             <Button variant="light">Go Back</Button>
             <Button
-              color="success"
+              color="primary"
               className="text-white"
               onClick={() => completeTransaction({ transactionId: ld.transaction.id })}
               isLoading={isCompleteLoading}
@@ -228,9 +219,13 @@ const Route = () => {
           onScrollChange={(_e, data) => {
             isAtBottom.current = data.isAtBottom;
           }}
-          onMessageSend={async (message) => {
-            await createMessage({ message, transactionId: ld.transaction.id });
-          }}
+          onMessageSend={
+            !isCompleted
+              ? async (message) => {
+                  await createMessage({ message, transactionId: ld.transaction.id });
+                }
+              : undefined
+          }
         >
           {ld.sender === "buyer" && (
             <div className="flex gap-2 items-center justify-center">
@@ -242,62 +237,21 @@ const Route = () => {
               >
                 Report
               </Button>
-              <Button
-                color="success"
-                endContent={<CheckIcon className="size-4" />}
-                className="text-white"
-                onClick={toggleCompleteOpen}
-              >
-                Complete
-              </Button>
+              {!isCompleted && (
+                <Button
+                  color="primary"
+                  endContent={<CheckIcon className="size-4" />}
+                  className="text-white"
+                  onClick={toggleCompleteOpen}
+                >
+                  Complete
+                </Button>
+              )}
             </div>
           )}
         </ChatMessages>
       </div>
     </Page>
-  );
-};
-
-const reportReasons = ["Scamming", "Abusive language", "Other"];
-
-const reportFormSchema = v.object({ reason: v.string(), description: v.string() });
-
-type ReportFormOutput = v.InferOutput<typeof reportFormSchema>;
-
-const ReportForm: FC<{ onSubmit: (data: ReportFormOutput) => void | Promise<void> }> = (props) => {
-  const { mutateAsync: submit, isPending } = useMutation({
-    mutationFn: async (data: ReportFormOutput) => {
-      await props.onSubmit(data);
-    },
-  });
-  return (
-    <form
-      onSubmit={(e) => {
-        e.preventDefault();
-
-        const form = new FormData(e.currentTarget);
-
-        const valid = v.safeParse(reportFormSchema, Object.fromEntries(form.entries()));
-
-        if (!valid.success) {
-          toast.error("Invalid form data");
-          return;
-        }
-
-        submit(valid.output);
-      }}
-      className="flex flex-col gap-4"
-    >
-      <Select label="Reason for report" isRequired name="reason">
-        {reportReasons.map((reason) => (
-          <SelectItem key={reason}>{reason}</SelectItem>
-        ))}
-      </Select>
-      <Textarea label="Description" name="description" minLength={1} />
-      <Button type="submit" color="primary" isLoading={isPending}>
-        Submit
-      </Button>
-    </form>
   );
 };
 

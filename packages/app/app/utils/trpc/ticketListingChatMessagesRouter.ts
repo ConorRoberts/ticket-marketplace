@@ -1,6 +1,6 @@
 import { TRPCError } from "@trpc/server";
 import { ticketListingChatMessages, ticketListingTransactions } from "common/schema";
-import { eq, inArray } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import * as v from "valibot";
 import { db } from "../db.server";
 import { publishPubSubMessage } from "../publishPubSubMessage";
@@ -33,6 +33,10 @@ export const ticketListingChatMessagesRouter = router({
 
       if (!transaction) {
         throw new TRPCError({ code: "BAD_REQUEST", message: "Transaction not found" });
+      }
+
+      if (transaction.completedAt !== null) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: "Transaction is complete, chat is closed." });
       }
 
       // Must be 1) listing owner, 2) transaction owner, 3) not signed in + transaction has no owner
@@ -72,20 +76,5 @@ export const ticketListingChatMessagesRouter = router({
       await publishPubSubMessage({ room: transaction.id, event: { type: "chatMessage", data: newMessage } });
 
       return newMessage;
-    }),
-  readMessages: publicProcedure
-    .input(v.parser(v.object({ transactionId: v.string(), messageIds: v.array(v.string()) })))
-    .mutation(async ({ ctx, input }) => {
-      if (input.messageIds.length === 0) {
-        return null;
-      }
-
-      const userId = ctx.user?.id ?? null;
-
-      const messages = await db.query.ticketListingChatMessages.findMany({
-        where: inArray(ticketListingChatMessages.id, input.messageIds),
-      });
-
-      return [];
     }),
 });
