@@ -244,7 +244,7 @@ const Route = () => {
                   className="text-white"
                   onClick={toggleCompleteOpen}
                 >
-                  Complete
+                  Complete Transaction
                 </Button>
               )}
             </div>

@@ -12,7 +12,8 @@ const WEBSITE_URL =
 
 export const seo = {
   name: "TixSnap",
-  description: "TixSnap",
+  description:
+    "TixSnap is the most reliable platform for ticket resellers. Be confident buying concert, rave, or any other tickets! Created in collaboration with Toronto House Community.",
   imageId: "",
 };
 
