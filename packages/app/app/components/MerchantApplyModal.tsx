@@ -2,7 +2,7 @@ import { Button, Input, Modal, ModalBody, ModalContent, ModalHeader, Textarea } 
 import { createId } from "@paralleldrive/cuid2";
 import { useMutation } from "@tanstack/react-query";
 import { produce } from "immer";
-import { PlusIcon, XIcon } from "lucide-react";
+import { XIcon } from "lucide-react";
 import { type FC, useState } from "react";
 import { toast } from "sonner";
 import * as v from "valibot";
@@ -74,7 +74,7 @@ export const MerchantApplyModal: FC<{
               validate={(value) => (value.length > 0 ? true : "Body must not be empty.")}
             />
             <div className="flex flex-col gap-2">
-              <p className="font-medium text-sm">Social Media Links</p>
+              {/* <p className="font-medium text-sm">Social Media Links</p> */}
               <div className="flex flex-col gap-1">
                 {links.map((e) => (
                   <SocialMediaLink
@@ -85,7 +85,7 @@ export const MerchantApplyModal: FC<{
                   />
                 ))}
               </div>
-              <Button
+              {/* <Button
                 isDisabled={links.length > 5}
                 size="sm"
                 variant="flat"
@@ -99,7 +99,7 @@ export const MerchantApplyModal: FC<{
                 }
               >
                 Add Link
-              </Button>
+              </Button> */}
             </div>
             <Button type="submit" isLoading={isSubmitLoading} color="primary">
               Submit
@@ -133,7 +133,7 @@ const SocialMediaLink: FC<{ onValueChange: (value: string) => void; onRemove: ()
   return (
     <div className="flex gap-2 items-center">
       <Input
-        placeholder="URL"
+        placeholder="Instagram URL"
         value={props.value}
         onValueChange={props.onValueChange}
         type="url"

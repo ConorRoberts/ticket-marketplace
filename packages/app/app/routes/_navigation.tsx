@@ -85,27 +85,30 @@ const MobileNavLink: FC<ComponentProps<typeof NavLink>> = ({ children, className
 
 const CustomUserButton: FC<ComponentProps<typeof UserButton>> = (props) => {
   const { mutateAsync: createLoginLink } = trpc.merchants.createStripeConnectLoginLink.useMutation();
+  const { data: user } = trpc.accounts.getCurrent.useQuery();
   const meta = useUserMetadata();
   const navigate = useNavigate();
 
   return (
     <UserButton afterSwitchSessionUrl="/" signInUrl="/login" {...props}>
       <UserButton.MenuItems>
-        <UserButton.Action
-          label="Manage Stripe account"
-          labelIcon={<CreditCardIcon className="size-3 m-auto" />}
-          onClick={() => {
-            // Create login link
-            toast.promise(createLoginLink, {
-              loading: "Redirecting",
-              success: (data) => {
-                window.location.href = data.url;
+        {user?.merchant?.isStripeAccountSetup && (
+          <UserButton.Action
+            label="Manage Stripe account"
+            labelIcon={<CreditCardIcon className="size-3 m-auto" />}
+            onClick={() => {
+              // Create login link
+              toast.promise(createLoginLink, {
+                loading: "Redirecting",
+                success: (data) => {
+                  window.location.href = data.url;
 
-                return "Redirecting";
-              },
-            });
-          }}
-        />
+                  return "Redirecting";
+                },
+              });
+            }}
+          />
+        )}
         {meta?.public.isAdmin && (
           <UserButton.Action
             label="Admin page"
