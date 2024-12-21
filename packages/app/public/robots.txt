@@ -3,4 +3,4 @@
 User-agent: *
 Disallow:
 
-Sitemap: https://www.parachuteexecutivecoaching.com/sitemap.xml
+Sitemap: https://tixsnap.com/sitemap.xml

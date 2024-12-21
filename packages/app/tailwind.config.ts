@@ -13,6 +13,10 @@ const config: Config = {
       },
       colors: {
         gray: colors.neutral,
+        brand: {
+          blue: "#5DBCFF",
+          purple: "#BA26F4",
+        },
       },
     },
   },

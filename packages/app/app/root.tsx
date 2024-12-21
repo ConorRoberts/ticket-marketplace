@@ -20,7 +20,7 @@ import {
   Scripts,
   ScrollRestoration,
   isRouteErrorResponse,
-  // redirectDocument,
+  redirectDocument,
   useNavigate,
   useRouteError,
 } from "@remix-run/react";
@@ -32,14 +32,14 @@ import { Toaster } from "sonner";
 import { reduxStore } from "~/state/store";
 import { env } from "~/utils/env.server";
 import { TrpcProvider } from "./components/TrpcProvider";
-// import { FLY_DEPLOY_URL } from "./utils/createMetadata";
+import { FLY_DEPLOY_URL } from "./utils/createMetadata";
 
 export const loader = (args: LoaderFunctionArgs) => {
-  // const url = new URL(args.request.url);
+  const url = new URL(args.request.url);
 
-  // if (url.host.includes(FLY_DEPLOY_URL)) {
-  //   throw redirectDocument(env.server.PUBLIC_WEBSITE_URL, { status: 301 });
-  // }
+  if (url.host.includes(FLY_DEPLOY_URL)) {
+    throw redirectDocument(env.server.PUBLIC_WEBSITE_URL, { status: 301 });
+  }
 
   return rootAuthLoader(
     args,

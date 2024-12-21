@@ -7,14 +7,13 @@ type Optionals = { description: string; imageId: string; noIndex?: boolean; sepa
 const keywords: string[] = [];
 
 export const FLY_DEPLOY_URL = "ticket-marketplace.fly.dev";
-const WEBSITE_URL =
-  process.env.NODE_ENV === "development" ? "http://localhost:3000" : "https://ticket-marketplace.fly.dev";
+const WEBSITE_URL = process.env.NODE_ENV === "development" ? "http://localhost:3000" : "https://tixsnap.com";
 
 export const seo = {
   name: "TixSnap",
   description:
     "TixSnap is the most reliable platform for ticket resellers. Be confident buying concert, rave, or any other tickets! Created in collaboration with Toronto House Community.",
-  imageId: "",
+  imageId: "76160701-d91e-446d-04dd-651b52c6f900",
 };
 
 export const createMetadata = (args: RequiredOptions & Partial<Optionals>) => {
