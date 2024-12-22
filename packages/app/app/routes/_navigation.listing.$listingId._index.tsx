@@ -27,6 +27,7 @@ import { usePartySocket } from "partysocket/react";
 import type { FC } from "react";
 import { useForm } from "react-hook-form";
 import * as v from "valibot";
+import { ClientDate } from "~/components/ClientDate";
 import { Image } from "~/components/Image";
 import { LoadingSpinner } from "~/components/LoadingSpinner";
 import { Page } from "~/components/Page";
@@ -214,80 +215,100 @@ const Route = () => {
         />
       )}
 
-      <div className="grid lg:grid-cols-2 gap-8 lg:gap-16">
-        <div className="w-full h-[500px] relative rounded-[30px] overflow-hidden">
-          <div className="z-[1] absolute inset-0 opacity-35">
-            <Noise grainSize={1.5} />
-          </div>
+      <div className="border rounded-3xl p-4 relative overflow-hidden isolate">
+        <div className="-z-[1] absolute inset-0 opacity-35">
+          <Noise grainSize={1.1} />
+        </div>
+        {/* Background image */}
+        <div className="absolute inset-0 opacity-50 -z-[2]">
           <Image
             imageId={loaderData.listing.event.imageId ?? ""}
             width={800}
-            options={{ brightness: 6, blur: 80 }}
+            options={{ brightness: 3, blur: 35 }}
             className="z-0"
           />
-          <div className="absolute inset-4 z-[2] shadow-lg">
+        </div>
+
+        <div className="grid lg:grid-cols-2 gap-8 lg:gap-16">
+          <div className="w-full z-[2] shadow-lg h-[500px]">
             <Image imageId={loaderData.listing.event.imageId ?? ""} width={600} />
           </div>
-        </div>
-        <div className="relative flex flex-col gap-2 lg:py-8">
-          {isAdmin && (
-            <Dropdown>
-              <DropdownTrigger className="ml-auto">
-                <Button isIconOnly size="sm" variant="light">
-                  <SettingsIcon className="size-5" />
-                </Button>
-              </DropdownTrigger>
-              <DropdownMenu
-                disabledKeys={isDeleteLoading ? ["delete"] : []}
-                onAction={(key) => {
-                  if (key === "delete") {
-                    onDeleteOpenChange();
-                  } else if (key === "edit") {
-                    onEditOpenChange();
-                  }
-                }}
-              >
-                <DropdownItem key="edit" startContent={<PencilIcon className="size-4" />}>
-                  Update
-                </DropdownItem>
-                <DropdownItem
-                  key="delete"
-                  color="danger"
-                  startContent={<TrashIcon className="size-4" />}
-                  className="text-danger"
-                  endContent={isDeleteLoading ? <LoadingSpinner className="size-4" /> : undefined}
+          <div className="relative flex flex-col gap-2 lg:py-8">
+            {isAdmin && (
+              <Dropdown>
+                <DropdownTrigger className="ml-auto">
+                  <Button isIconOnly size="sm" variant="light">
+                    <SettingsIcon className="size-5" />
+                  </Button>
+                </DropdownTrigger>
+                <DropdownMenu
+                  disabledKeys={isDeleteLoading ? ["delete"] : []}
+                  onAction={(key) => {
+                    if (key === "delete") {
+                      onDeleteOpenChange();
+                    } else if (key === "edit") {
+                      onEditOpenChange();
+                    }
+                  }}
                 >
-                  Delete
-                </DropdownItem>
-              </DropdownMenu>
-            </Dropdown>
-          )}
-          <div className="flex flex-col">
-            <h1 className="font-extrabold text-4xl text-center lg:text-left">{loaderData.listing.event.name}</h1>
-            <p>Listed by {loaderData.merchantName}</p>
-            <p className="mt-4 font-semibold">{`${loaderData.listing.quantity} Ticket${loaderData.listing.quantity > 1 ? "s" : ""}`}</p>
-          </div>
-          <p>{loaderData.listing.description}</p>
-          <Button
-            className="w-full mt-auto"
-            color="primary"
-            isDisabled={
-              user?.id === loaderData.listing.merchant.userId || isCreatingSession || loaderData.listing.isSold
-            }
-            isLoading={isCreatingSession}
-            onClick={() => {
-              const email = user?.primaryEmailAddress?.emailAddress;
-              if (!email) {
-                onEmailDialogOpenChange();
-                return;
-              }
+                  <DropdownItem key="edit" startContent={<PencilIcon className="size-4" />}>
+                    Update
+                  </DropdownItem>
+                  <DropdownItem
+                    key="delete"
+                    color="danger"
+                    startContent={<TrashIcon className="size-4" />}
+                    className="text-danger"
+                    endContent={isDeleteLoading ? <LoadingSpinner className="size-4" /> : undefined}
+                  >
+                    Delete
+                  </DropdownItem>
+                </DropdownMenu>
+              </Dropdown>
+            )}
+            <div className="flex flex-col gap-4 font-medium">
+              <h1 className="font-extrabold text-4xl text-left">{loaderData.listing.event.name}</h1>
 
-              handlePurchaseContinue(email);
-            }}
-            startContent={<TicketIcon className="size-4" />}
-          >
-            {loaderData.listing.isSold ? "Sold Out" : "Buy"}
-          </Button>
+              <div className="flex sm:items-center gap-2 flex-col items-start sm:flex-row">
+                <p className="font-semibold">Date:</p>
+
+                <p className="tabular-nums">
+                  <ClientDate date={loaderData.listing.event.date} />
+                </p>
+              </div>
+              <div className="flex sm:items-center gap-2 flex-col items-start sm:flex-row">
+                <p className="font-semibold">Listed by:</p>
+
+                <p className="tabular-nums">{loaderData.merchantName}</p>
+              </div>
+              <div className="flex sm:items-center gap-2 flex-col items-start sm:flex-row">
+                <p className="font-semibold">Quantity:</p>
+
+                <p className="tabular-nums">{loaderData.listing.quantity}</p>
+              </div>
+              <p>{loaderData.listing.description}</p>
+            </div>
+            <Button
+              className="w-full mt-auto"
+              color="primary"
+              isDisabled={
+                user?.id === loaderData.listing.merchant.userId || isCreatingSession || loaderData.listing.isSold
+              }
+              isLoading={isCreatingSession}
+              onClick={() => {
+                const email = user?.primaryEmailAddress?.emailAddress;
+                if (!email) {
+                  onEmailDialogOpenChange();
+                  return;
+                }
+
+                handlePurchaseContinue(email);
+              }}
+              startContent={<TicketIcon className="size-4" />}
+            >
+              {loaderData.listing.isSold ? "Sold Out" : "Buy"}
+            </Button>
+          </div>
         </div>
       </div>
     </Page>

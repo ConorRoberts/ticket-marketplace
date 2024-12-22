@@ -30,11 +30,34 @@ const Route = () => {
 
   return (
     <Page>
-      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {loaderData.listings.map((e) => (
-          <TicketListingPreview key={e.id} data={e} />
-        ))}
+      <div className="isolate -z-10 fixed inset-x-0 top-0">
+        <div className="absolute top-0 right-0 bg-gradient-to-l from-brand-blue/25 to-transparent w-96 h-screen" />
+        <div className="absolute top-0 left-0 bg-gradient-to-r from-brand-purple/25 to-transparent w-96 h-screen" />
       </div>
+      <div className="px-1 space-y-1 text-balance text-center mb-16">
+        <h1 className="font-extrabold text-5xl">TixSnap</h1>
+        <p className="font-medium">
+          Created in collaboration with{" "}
+          <a
+            href="https://www.instagram.com/torontohousecommunityy"
+            target="_blank"
+            rel="noreferrer"
+            className="font-semibold"
+          >
+            Toronto House Community
+          </a>
+        </p>
+      </div>
+      {loaderData.listings.length === 0 && (
+        <p className="text-center mt-24 font-medium">No listings yet. Check back later.</p>
+      )}
+      {loaderData.listings.length > 0 && (
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {loaderData.listings.map((e) => (
+            <TicketListingPreview key={e.id} data={e} />
+          ))}
+        </div>
+      )}
     </Page>
   );
 };

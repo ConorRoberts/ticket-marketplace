@@ -221,7 +221,10 @@ const Layout = () => {
           )}
           <MobileNavigation key={location.pathname} onSellTicketOpen={handleSellTicketModalOpen} />
         </div>
-        <Navbar className="w-full max-w-5xl mx-auto hidden lg:block bg-transparent" position="static">
+        <Navbar
+          className="w-full max-w-5xl mx-auto hidden lg:block bg-white/50 border border-gray-200/50 backdrop-blur-sm rounded-xl mt-1"
+          position="static"
+        >
           <NavbarContent>
             <NavbarBrand className="flex-grow-0">
               <Link to="/">

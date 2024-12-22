@@ -72,7 +72,7 @@ export const Layout: FC<PropsWithChildren> = ({ children }) => {
         <Meta />
         <Links />
       </head>
-      <body className="bg-gray-50">
+      <body className="bg-gray-50 isolate">
         {children}
         <ScrollRestoration />
         <Scripts />
