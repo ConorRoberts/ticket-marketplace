@@ -34,7 +34,7 @@ const Route = () => {
         <div className="absolute top-0 right-0 bg-gradient-to-l from-brand-blue/25 to-transparent w-96 h-screen" />
         <div className="absolute top-0 left-0 bg-gradient-to-r from-brand-purple/25 to-transparent w-96 h-screen" />
       </div>
-      <div className="px-1 space-y-1 text-balance text-center mb-16">
+      <div className="px-1 space-y-1 text-pretty text-center mt-16 lg:mt-0 mb-16">
         <h1 className="font-extrabold text-5xl">TixSnap</h1>
         <p className="font-medium">
           Created in collaboration with{" "}
