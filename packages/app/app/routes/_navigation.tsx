@@ -152,7 +152,7 @@ const CustomUserButton: FC<ComponentProps<typeof UserButton>> = (props) => {
 const Layout = () => {
   useStripeAccountChecker();
   const location = useLocation();
-  const { isSignedIn = false } = useUser();
+  const { isSignedIn = false, isLoaded: isUserLoaded } = useUser();
   const { isOpen: isSellModalOpen, onOpenChange: onSellModalOpenChange } = useDisclosure();
   const { isOpen: isNotificationsModalOpen, onOpenChange: onNotificationsModalOpenChange } = useDisclosure();
   const { data: merchant, refetch: refetchMerchant } = trpc.merchants.getCurrent.useQuery(undefined, {
@@ -182,7 +182,21 @@ const Layout = () => {
   });
 
   const handleSellTicketModalOpen = () => {
+    if (!isUserLoaded) {
+      return;
+    }
+
+    if (!isSignedIn) {
+      const search = new URLSearchParams();
+
+      search.set("redirect_url", window.location.href);
+
+      navigate(`/login?${search.toString()}`);
+      return;
+    }
+
     if (!merchant) {
+      console.error("User has no merchant profile");
       return;
     }
 
