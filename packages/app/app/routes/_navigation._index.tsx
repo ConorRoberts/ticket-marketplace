@@ -31,8 +31,8 @@ const Route = () => {
   return (
     <Page>
       <div className="isolate -z-10 fixed inset-x-0 top-0">
-        <div className="absolute top-0 right-0 bg-gradient-to-l from-brand-blue/25 to-transparent w-96 h-screen" />
-        <div className="absolute top-0 left-0 bg-gradient-to-r from-brand-purple/25 to-transparent w-96 h-screen" />
+        <div className="absolute top-0 right-0 bg-gradient-to-l from-brand-blue/10 sm:from-brand-blue/25 to-transparent w-96 h-screen" />
+        <div className="absolute top-0 left-0 bg-gradient-to-r from-brand-purple/10 sm:from-brand-purple/25 to-transparent w-96 h-screen" />
       </div>
       <div className="px-1 space-y-1 text-pretty text-center mt-16 lg:mt-0 mb-16">
         <h1 className="font-extrabold text-5xl">TixSnap</h1>
